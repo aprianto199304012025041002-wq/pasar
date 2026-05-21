@@ -1,0 +1,32 @@
+name: Deploy ke Hostinger via FTP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v3
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: 153.92.10.189
+          username: u781960094.pasar.balmonlogja.info
+          password: ${{ secrets.FTP_PASS }}
+          port: 21
+          local-dir: ./
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/schema.sql
+            **/import.php
+            **/data/**
+            **/.gitignore
+            **/config.php

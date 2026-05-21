@@ -1,0 +1,10 @@
+config.php
+data/
+*.csv
+schema.sql
+import.php
+.env
+*.vsidx
+.vs/
+*.suo
+*.user
