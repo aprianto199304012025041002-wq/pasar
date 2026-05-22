@@ -1,4 +1,5 @@
 config.php
+config.local.php
 data/
 *.csv
 schema.sql

@@ -204,7 +204,7 @@ body {
 
 /* User block inside mobile drawer */
 .nav-user-mobile {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 12px;
     padding: 14px 0 10px;
@@ -212,21 +212,22 @@ body {
     margin-top: 8px;
 }
 
-    .nav-user-mobile .user-name {
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    .nav-user-mobile .user-role {
-        font-size: 12px;
-        color: var(--muted);
-    }
-
-@media (min-width: 768px) {
-    .nav-user-mobile {
-        display: none !important;
-    }
+/* Tampil hanya saat mobile drawer terbuka */
+.main-nav.open .nav-user-mobile {
+    display: flex;
 }
+
+.nav-user-mobile .user-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.nav-user-mobile .user-role {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+
 
 /* Nav link */
 .nav-link {
