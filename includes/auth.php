@@ -26,50 +26,32 @@ function is_logged_in(): bool {
 }
 
 function verify_token(string $token): array|false {
-    $url = SSO_VERIFY_URL . '?' . http_build_query([
-        'token'         => $token,
-        'client_id'     => SSO_CLIENT_ID,
-        'client_secret' => SSO_CLIENT_SECRET,
-    ]);
+    // Verifikasi lokal — tidak perlu hit server SSO
+    $b64d = fn($d) => base64_decode(strtr($d, '-_', '+/') . str_repeat('=', (4 - strlen($d) % 4) % 4));
+    $b64e = fn($d) => rtrim(strtr(base64_encode($d), '+/', '-_'), '=');
 
-    $cookie_file = sys_get_temp_dir() . '/sso_cookie_' . md5($url) . '.txt';
+    // Pecah token
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) return false;
+    [$header, $body, $sig] = $parts;
 
-    // Request pertama — ambil cookie anti-bot
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 10,
-        CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_COOKIEJAR      => $cookie_file,
-        CURLOPT_COOKIEFILE     => $cookie_file,
-        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; SIMF-Monitor/1.0)',
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_MAXREDIRS      => 3,
-    ]);
-    $response = curl_exec($ch);
-    curl_close($ch);
+    // Verifikasi signature pakai shared secret
+    $expected = $b64e(hash_hmac('sha256', "$header.$body", SSO_CLIENT_SECRET, true));
+    if (!hash_equals($expected, $sig)) return false;
 
-    // Kalau response masih HTML (anti-bot challenge), request kedua dengan cookie
-    if ($response && strpos($response, '<html') !== false) {
-        $ch2 = curl_init($url);
-        curl_setopt_array($ch2, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 10,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_COOKIEJAR      => $cookie_file,
-            CURLOPT_COOKIEFILE     => $cookie_file,
-            CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; SIMF-Monitor/1.0)',
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 3,
-        ]);
-        $response = curl_exec($ch2);
-        curl_close($ch2);
-    }
+    // Decode payload
+    $payload = json_decode($b64d($body), true);
+    if (!$payload) return false;
 
-    @unlink($cookie_file);
+    // Cek expiry
+    if (($payload['exp'] ?? 0) < time()) return false;
 
-    if (!$response) return false;
-    $data = json_decode($response, true);
-    if (!$data || empty($data['valid'])) return false;
-    return $data['payload'] ?? false;
+    // Return format sama seperti response verify.php SSO
+    return [
+        'user_id' => $payload['sub'],
+        'name'    => $payload['name'],
+        'email'   => $payload['email'],
+        'role'    => $payload['role'],
+        'exp'     => $payload['exp'],
+    ];
 }
