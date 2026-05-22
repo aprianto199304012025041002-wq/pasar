@@ -21,7 +21,7 @@ jobs:
           password: ${{ secrets.FTP_PASS }}
           port: 21
           local-dir: ./
-          server-dir: /home/u781960094/domains/pasar.balmonjogja.info/public_html/
+          server-dir: /public_html/
           exclude: |
             **/.git*
             **/.git*/**

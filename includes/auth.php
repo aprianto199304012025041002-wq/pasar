@@ -32,19 +32,41 @@ function verify_token(string $token): array|false {
         'client_secret' => SSO_CLIENT_SECRET,
     ]);
 
-    // Coba cURL dulu, fallback ke file_get_contents
-    if (function_exists('curl_init')) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
+    $cookie_file = sys_get_temp_dir() . '/sso_cookie_' . md5($url) . '.txt';
+
+    // Request pertama — ambil cookie anti-bot
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_COOKIEJAR      => $cookie_file,
+        CURLOPT_COOKIEFILE     => $cookie_file,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; SIMF-Monitor/1.0)',
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 3,
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    // Kalau response masih HTML (anti-bot challenge), request kedua dengan cookie
+    if ($response && strpos($response, '<html') !== false) {
+        $ch2 = curl_init($url);
+        curl_setopt_array($ch2, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 10,
             CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_COOKIEJAR      => $cookie_file,
+            CURLOPT_COOKIEFILE     => $cookie_file,
+            CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; SIMF-Monitor/1.0)',
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS      => 3,
         ]);
-        $response = curl_exec($ch);
-        curl_close($ch);
-    } else {
-        $response = @file_get_contents($url);
+        $response = curl_exec($ch2);
+        curl_close($ch2);
     }
+
+    @unlink($cookie_file);
 
     if (!$response) return false;
     $data = json_decode($response, true);
