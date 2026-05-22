@@ -1,9 +1,40 @@
 /* SIMF Monitor — app.js */
 
-// ── Filter buttons (service type) ────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
 
-  // Service filter pills — sync to hidden select / URL param
+  // ── Hamburger / mobile drawer ───────────────────────────────
+  var btnMenu  = document.getElementById('btn-menu');
+  var mainNav  = document.getElementById('main-nav');
+  var backdrop = document.getElementById('nav-backdrop');
+  var menuIcon = document.getElementById('menu-icon');
+
+  if (btnMenu && mainNav && backdrop) {
+    function openNav() {
+      mainNav.classList.add('open');
+      backdrop.classList.add('show');
+      if (menuIcon) menuIcon.className = 'ti ti-x';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeNav() {
+      mainNav.classList.remove('open');
+      backdrop.classList.remove('show');
+      if (menuIcon) menuIcon.className = 'ti ti-menu-2';
+      document.body.style.overflow = '';
+    }
+
+    btnMenu.addEventListener('click', function () {
+      mainNav.classList.contains('open') ? closeNav() : openNav();
+    });
+    backdrop.addEventListener('click', closeNav);
+    mainNav.querySelectorAll('.nav-link').forEach(function (link) {
+      link.addEventListener('click', closeNav);
+    });
+    window.addEventListener('resize', function () {
+      if (window.innerWidth >= 768) closeNav();
+    });
+  }
+
+  // ── Service filter pills — sync to hidden select / URL param ─
   document.querySelectorAll('.filter-btn[data-filter]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var group = btn.dataset.group || 'service';
@@ -14,14 +45,13 @@ document.addEventListener('DOMContentLoaded', function () {
       var target = document.getElementById(btn.dataset.target);
       if (target) {
         target.value = btn.dataset.filter;
-        // submit parent form if present
         var form = target.closest('form');
         if (form) form.submit();
       }
     });
   });
 
-  // Auto-submit select filters on change
+  // ── Auto-submit select filters on change ─────────────────────
   document.querySelectorAll('select.auto-submit').forEach(function (sel) {
     sel.addEventListener('change', function () {
       var form = sel.closest('form');
@@ -29,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Debounced search input
+  // ── Debounced search input ────────────────────────────────────
   var searchInput = document.getElementById('q');
   if (searchInput) {
     var timeout;
@@ -41,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 400);
     });
   }
+
 });
 
 // ── Service badge class helper (used in peta.php) ────────────
