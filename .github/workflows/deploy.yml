@@ -13,6 +13,26 @@ jobs:
       - name: Checkout kode
         uses: actions/checkout@v3
 
+      - name: Buat config.local.php
+        run: |
+          cat > config.local.php << 'PHPEOF'
+          <?php
+          define('DB_HOST',           'localhost');
+          define('DB_NAME',           '${{ secrets.DB_NAME }}');
+          define('DB_USER',           '${{ secrets.DB_USER }}');
+          define('DB_PASS',           '${{ secrets.DB_PASS }}');
+          define('DB_CHARSET',        'utf8mb4');
+          define('SSO_CLIENT_ID',     '${{ secrets.SSO_CLIENT_ID }}');
+          define('SSO_CLIENT_SECRET', '${{ secrets.SSO_CLIENT_SECRET }}');
+          define('SSO_URL',           'https://gudeg.xo.je/sso.php');
+          define('SSO_VERIFY_URL',    'https://gudeg.xo.je/verify.php');
+          define('SSO_CALLBACK_URL',  'https://pasar.balmonjogja.info/callback.php');
+          define('APP_NAME',          'pasar');
+          define('APP_SUBTITLE',      'Balmon Kelas I Yogyakarta');
+          define('APP_BASE_URL',      'https://pasar.balmonjogja.info');
+          define('PER_PAGE',          25);
+          PHPEOF
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -23,7 +43,6 @@ jobs:
           local-dir: ./
           server-dir: /public_html/
           state-name: ftp-deploy-sync-state.json
-          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.git*/**
@@ -31,4 +50,3 @@ jobs:
             **/import.php
             **/data/**
             **/.gitignore
-            **/config.local.php
