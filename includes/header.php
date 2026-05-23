@@ -33,7 +33,7 @@ $nav_items = [
       </div>
     </div>
 
-    <!-- Desktop nav (hidden on mobile, shown ≥768px) -->
+    <!-- Desktop nav -->
     <nav class="main-nav" id="main-nav">
       <?php foreach ($nav_items as $slug => $item): ?>
         <a href="<?= APP_BASE_URL ?>/<?= $slug ?>.php"
@@ -42,18 +42,19 @@ $nav_items = [
           <?= $item['label'] ?>
         </a>
       <?php endforeach; ?>
-      <!-- User info inside mobile drawer -->
-      <div class="nav-user-mobile">
-        <div class="avatar"><?= strtoupper(substr($user['name'], 0, 2)) ?></div>
-        <div>
-          <div class="user-name"><?= htmlspecialchars($user['name']) ?></div>
-          <div class="user-role"><?= htmlspecialchars($user['role']) ?></div>
-        </div>
-        <a href="<?= APP_BASE_URL ?>/logout.php" class="btn-logout" title="Logout" style="margin-left:auto">
-          <i class="ti ti-logout"></i>
-        </a>
-      </div>
     </nav>
+
+    <!-- User info: muncul di dalam drawer saat mobile, tersembunyi di desktop -->
+    <div class="nav-user-mobile" id="nav-user-mobile" style="display:none">
+      <div class="avatar"><?= strtoupper(substr($user['name'], 0, 2)) ?></div>
+      <div>
+        <div class="user-name"><?= htmlspecialchars($user['name']) ?></div>
+        <div class="user-role"><?= htmlspecialchars($user['role']) ?></div>
+      </div>
+      <a href="<?= APP_BASE_URL ?>/logout.php" class="btn-logout" title="Logout" style="margin-left:auto">
+        <i class="ti ti-logout"></i>
+      </a>
+    </div>
 
     <!-- Desktop user (hidden on mobile) -->
     <div class="header-user">
@@ -72,6 +73,27 @@ $nav_items = [
       <i class="ti ti-menu-2" id="menu-icon"></i>
     </button>
 
+  </div>
+
+  <!-- Mobile drawer: nav + user info, di dalam header supaya posisinya tepat -->
+  <div class="mobile-drawer" id="mobile-drawer" style="display:none">
+    <?php foreach ($nav_items as $slug => $item): ?>
+      <a href="<?= APP_BASE_URL ?>/<?= $slug ?>.php"
+         class="drawer-link <?= $current === $slug ? 'active' : '' ?>">
+        <i class="ti <?= $item['icon'] ?>"></i>
+        <?= $item['label'] ?>
+      </a>
+    <?php endforeach; ?>
+    <div class="drawer-user">
+      <div class="avatar"><?= strtoupper(substr($user['name'], 0, 2)) ?></div>
+      <div>
+        <div class="user-name"><?= htmlspecialchars($user['name']) ?></div>
+        <div class="user-role"><?= htmlspecialchars($user['role']) ?></div>
+      </div>
+      <a href="<?= APP_BASE_URL ?>/logout.php" class="btn-logout" title="Logout" style="margin-left:auto">
+        <i class="ti ti-logout"></i>
+      </a>
+    </div>
   </div>
 </header>
 
