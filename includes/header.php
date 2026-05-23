@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../config.php';
 $user    = get_user();
 $current = basename($_SERVER['PHP_SELF'], '.php');
-
 $nav_items = [
     'dashboard' => ['label' => 'Dashboard',   'icon' => 'ti-dashboard'],
     'data'      => ['label' => 'Data ISR',     'icon' => 'ti-table'],
@@ -17,13 +16,12 @@ $nav_items = [
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title><?= htmlspecialchars($page_title ?? APP_NAME) ?> — <?= APP_NAME ?></title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-<link rel="stylesheet" href="<?= APP_BASE_URL ?>/assets/css/app.css">
+<link rel="stylesheet" href="<?= APP_BASE_URL ?>/assets/css/app.css?v=<?= filemtime(__DIR__ . '/../assets/css/app.css') ?>">
+<link rel="stylesheet" href="<?= APP_BASE_URL ?>/assets/js/app.js?v=<?= filemtime(__DIR__ . '/../assets/js/app.js') ?>">
 </head>
 <body>
-
 <!-- Sidebar overlay (mobile) -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
@@ -33,7 +31,6 @@ $nav_items = [
       <div class="logo-sub"><?= APP_SUBTITLE ?></div>
     </div>
   </div>
-
   <nav class="sidebar-nav">
     <?php foreach ($nav_items as $slug => $item): ?>
     <a href="<?= APP_BASE_URL ?>/<?= $slug ?>.php"
@@ -43,7 +40,6 @@ $nav_items = [
     </a>
     <?php endforeach; ?>
   </nav>
-
   <div class="sidebar-user">
     <div class="avatar"><?= strtoupper(substr($user['name'], 0, 2)) ?></div>
     <div class="sidebar-user-info">
@@ -55,10 +51,8 @@ $nav_items = [
     </a>
   </div>
 </aside>
-
 <!-- Main wrapper -->
 <div class="app-wrapper">
-
   <!-- Topbar (mobile only) -->
   <header class="topbar">
     <button class="btn-menu" id="btn-menu" aria-label="Menu">
@@ -69,5 +63,4 @@ $nav_items = [
       <div class="avatar sm"><?= strtoupper(substr($user['name'], 0, 2)) ?></div>
     </div>
   </header>
-
   <main class="app-main">
