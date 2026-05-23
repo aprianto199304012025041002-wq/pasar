@@ -1,8 +1,6 @@
 /* SIMF Monitor — app.js */
-
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ── Sidebar toggle (mobile) ─────────────────────────────────
     var btnMenu = document.getElementById('btn-menu');
     var sidebar = document.getElementById('sidebar');
     var overlay = document.getElementById('sidebar-overlay');
@@ -21,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (menuIcon) menuIcon.className = 'ti ti-menu-2';
             document.body.style.overflow = '';
         }
-
         btnMenu.addEventListener('click', function () {
             sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
         });
@@ -34,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── Service filter pills ────────────────────────────────────
     document.querySelectorAll('.filter-btn[data-filter]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var group = btn.dataset.group || 'service';
@@ -50,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ── Auto-submit select ──────────────────────────────────────
     document.querySelectorAll('select.auto-submit').forEach(function (sel) {
         sel.addEventListener('change', function () {
             var form = sel.closest('form');
@@ -58,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ── Debounced search ────────────────────────────────────────
     var searchInput = document.getElementById('q');
     if (searchInput) {
         var timeout;
@@ -70,10 +64,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 400);
         });
     }
-
 });
 
-// ── Helpers ─────────────────────────────────────────────────
 function serviceBadgeClass(service) {
     var map = {
         'Fixed Service': 'badge-fixed',
