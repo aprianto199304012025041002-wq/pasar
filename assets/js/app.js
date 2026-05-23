@@ -2,46 +2,45 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ── Hamburger / mobile drawer ───────────────────────────────
+    // ── Sidebar toggle (mobile) ─────────────────────────────────
     var btnMenu = document.getElementById('btn-menu');
-    var drawer = document.getElementById('mobile-drawer');
-    var backdrop = document.getElementById('nav-backdrop');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
     var menuIcon = document.getElementById('menu-icon');
 
-    if (btnMenu && drawer && backdrop) {
-        function openNav() {
-            drawer.style.display = 'flex';
-            backdrop.classList.add('show');
+    if (btnMenu && sidebar && overlay) {
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('show');
             if (menuIcon) menuIcon.className = 'ti ti-x';
             document.body.style.overflow = 'hidden';
         }
-        function closeNav() {
-            drawer.style.display = 'none';
-            backdrop.classList.remove('show');
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
             if (menuIcon) menuIcon.className = 'ti ti-menu-2';
             document.body.style.overflow = '';
         }
 
         btnMenu.addEventListener('click', function () {
-            drawer.style.display === 'none' ? openNav() : closeNav();
+            sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
         });
-        backdrop.addEventListener('click', closeNav);
-        drawer.querySelectorAll('.drawer-link').forEach(function (link) {
-            link.addEventListener('click', closeNav);
+        overlay.addEventListener('click', closeSidebar);
+        sidebar.querySelectorAll('.sidebar-link').forEach(function (link) {
+            link.addEventListener('click', closeSidebar);
         });
         window.addEventListener('resize', function () {
-            if (window.innerWidth >= 768) closeNav();
+            if (window.innerWidth >= 768) closeSidebar();
         });
     }
 
-    // ── Service filter pills — sync to hidden select / URL param ─
+    // ── Service filter pills ────────────────────────────────────
     document.querySelectorAll('.filter-btn[data-filter]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var group = btn.dataset.group || 'service';
             document.querySelectorAll('.filter-btn[data-group="' + group + '"]')
                 .forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
-
             var target = document.getElementById(btn.dataset.target);
             if (target) {
                 target.value = btn.dataset.filter;
@@ -51,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ── Auto-submit select filters on change ─────────────────────
+    // ── Auto-submit select ──────────────────────────────────────
     document.querySelectorAll('select.auto-submit').forEach(function (sel) {
         sel.addEventListener('change', function () {
             var form = sel.closest('form');
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ── Debounced search input ────────────────────────────────────
+    // ── Debounced search ────────────────────────────────────────
     var searchInput = document.getElementById('q');
     if (searchInput) {
         var timeout;
@@ -74,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
-// ── Service badge class helper (used in peta.php) ────────────
+// ── Helpers ─────────────────────────────────────────────────
 function serviceBadgeClass(service) {
     var map = {
         'Fixed Service': 'badge-fixed',
@@ -86,7 +85,6 @@ function serviceBadgeClass(service) {
     return map[service] || 'badge-other';
 }
 
-// ── Format number with thousand separator ────────────────────
 function fmtNum(n) {
     return Number(n).toLocaleString('id-ID');
 }
