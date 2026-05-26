@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config.php';
 $user    = get_user();
 $current = basename($_SERVER['PHP_SELF'], '.php');
 $nav_items = [
-    'dashboard' => ['label' => 'Dashboard',   'icon' => 'ti-dashboard'],
+    'dashboard' => ['label' => 'Dashboard',   'icon' => 'ti-layout-dashboard'],
     'data'      => ['label' => 'Data ISR',     'icon' => 'ti-table'],
     'peta'      => ['label' => 'Peta',         'icon' => 'ti-map-pin'],
     'laporan'   => ['label' => 'Laporan',      'icon' => 'ti-file-analytics'],
@@ -33,9 +33,10 @@ $nav_items = [
   <nav class="sidebar-nav">
     <?php foreach ($nav_items as $slug => $item): ?>
     <a href="<?= APP_BASE_URL ?>/<?= $slug ?>.php"
-       class="sidebar-link <?= $current === $slug ? 'active' : '' ?>">
+       class="sidebar-link <?= $current === $slug ? 'active' : '' ?>"
+       title="<?= htmlspecialchars($item['label']) ?>">
       <i class="ti <?= $item['icon'] ?>"></i>
-      <span><?= $item['label'] ?></span>
+      <span class="nav-label"><?= $item['label'] ?></span>
     </a>
     <?php endforeach; ?>
   </nav>
@@ -49,10 +50,14 @@ $nav_items = [
       <i class="ti ti-logout"></i>
     </a>
   </div>
+  <!-- Tombol collapse (desktop only, dikontrol via app.js) -->
+  <button class="btn-collapse" id="btn-collapse" aria-label="Collapse sidebar">
+    <i class="ti ti-chevron-left" id="collapse-icon"></i>
+  </button>
 </aside>
 <!-- Main wrapper -->
-<div class="app-wrapper">
-  <!-- Topbar (mobile only) -->
+<div class="app-wrapper" id="app-wrapper">
+  <!-- Topbar (mobile) -->
   <header class="topbar">
     <button class="btn-menu" id="btn-menu" aria-label="Menu">
       <i class="ti ti-menu-2" id="menu-icon"></i>

@@ -5,7 +5,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var sidebar = document.getElementById('sidebar');
     var overlay = document.getElementById('sidebar-overlay');
     var menuIcon = document.getElementById('menu-icon');
+    var wrapper = document.getElementById('app-wrapper');
 
+    /* ── Mobile sidebar ── */
     if (btnMenu && sidebar && overlay) {
         function openSidebar() {
             sidebar.classList.add('open');
@@ -31,6 +33,36 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    /* ── Desktop collapse ── */
+    var btnCollapse = document.getElementById('btn-collapse');
+    var colIcon = document.getElementById('collapse-icon');
+    var KEY = 'sidebar_collapsed';
+
+    function setCollapsed(collapsed, save) {
+        if (!sidebar || !wrapper) return;
+        if (collapsed) {
+            sidebar.classList.add('collapsed');
+            wrapper.classList.add('sidebar-collapsed');
+            if (colIcon) colIcon.className = 'ti ti-chevron-right';
+        } else {
+            sidebar.classList.remove('collapsed');
+            wrapper.classList.remove('sidebar-collapsed');
+            if (colIcon) colIcon.className = 'ti ti-chevron-left';
+        }
+        if (save) localStorage.setItem(KEY, collapsed ? '1' : '0');
+    }
+
+    if (window.innerWidth >= 768) {
+        setCollapsed(localStorage.getItem(KEY) === '1', false);
+    }
+
+    if (btnCollapse) {
+        btnCollapse.addEventListener('click', function () {
+            setCollapsed(!sidebar.classList.contains('collapsed'), true);
+        });
+    }
+
+    /* ── Filter buttons ── */
     document.querySelectorAll('.filter-btn[data-filter]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var group = btn.dataset.group || 'service';
@@ -46,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    /* ── Auto-submit selects ── */
     document.querySelectorAll('select.auto-submit').forEach(function (sel) {
         sel.addEventListener('change', function () {
             var form = sel.closest('form');
@@ -53,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    /* ── Search debounce ── */
     var searchInput = document.getElementById('q');
     if (searchInput) {
         var timeout;
