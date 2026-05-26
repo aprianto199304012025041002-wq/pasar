@@ -32,6 +32,7 @@ jobs:
           define('APP_BASE_URL',      'https://pasar.balmonjogja.info');
           define('PER_PAGE',          25);
           PHPEOF
+          printf "define('SSO_PUBLIC_KEY', <<<'PEM'\n%s\nPEM\n);\n" "$(echo '${{ secrets.SSO_PUBLIC_KEY }}' | base64 -d)" >> config.local.php
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
