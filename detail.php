@@ -16,44 +16,68 @@ $page_title = 'Detail ISR — ' . ($d['stn_name'] ?: $d['clnt_name']);
 function row_detail(string $label, $val): void {
     if ($val === null || $val === '') $val = '<span style="color:var(--muted)">—</span>';
     else $val = htmlspecialchars($val);
-    echo "<tr><td style='color:var(--muted);width:200px;padding:8px 12px;vertical-align:top;font-size:12px'>$label</td>
-               <td style='padding:8px 12px;font-size:13px'>$val</td></tr>";
+    echo "<tr>
+        <td style='color:#6b7280;width:180px;padding:7px 12px;vertical-align:top;font-size:11px'>$label</td>
+        <td style='padding:7px 12px;font-size:12px;color:#1e1b4b'>$val</td>
+    </tr>";
 }
 
 require_once __DIR__ . '/includes/header.php';
 ?>
 
+<style>
+.detail-card {
+    background: rgba(255,255,255,0.93);
+    border: 0.5px solid #c7d2fe;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.detail-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid #c7d2fe;
+    font-size: 13px;
+    font-weight: 600;
+}
+.detail-card table tr:nth-child(even) { background: #F5F7FF; }
+</style>
+
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-  <a href="data.php" class="btn"><i class="ti ti-arrow-left"></i>Kembali</a>
+  <a href="data.php" class="btn" style="border-color:#c7d2fe;color:#4F46E5;background:rgba(255,255,255,0.9)">
+    <i class="ti ti-arrow-left"></i>Kembali
+  </a>
   <div>
-    <div class="page-title" style="margin-bottom:0"><?= htmlspecialchars($d['stn_name'] ?: $d['clnt_name']) ?></div>
-    <div class="page-sub"><?= htmlspecialchars($d['curr_lic_num'] ?? '-') ?></div>
+    <div class="page-title" style="margin-bottom:0;color:#1e1b4b"><?= htmlspecialchars($d['stn_name'] ?: $d['clnt_name']) ?></div>
+    <div class="page-sub" style="color:#6366f1"><?= htmlspecialchars($d['curr_lic_num'] ?? '-') ?></div>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
 
   <!-- Info Entitas -->
-  <div class="card">
-    <div class="card-header"><span class="card-title"><i class="ti ti-building" style="font-size:15px;margin-right:6px"></i>Informasi Entitas</span></div>
-    <div style="overflow:auto">
+  <div class="detail-card">
+    <div class="detail-card-header" style="background:#EEF2FF;color:#3730a3">
+      <i class="ti ti-building" style="font-size:15px;color:#4F46E5"></i>Informasi Entitas
+    </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
-      row_detail('Nama Entitas',    $d['clnt_name']);
-      row_detail('Client ID',       $d['clnt_id']);
-      row_detail('No. SIMF',        $d['no_simf']);
-      row_detail('Application ID',  $d['appl_id']);
-      row_detail('Status',          $d['status_simf']);
-      row_detail('UPT',             $d['upt']);
+      row_detail('Nama Entitas',   $d['clnt_name']);
+      row_detail('Client ID',      $d['clnt_id']);
+      row_detail('No. SIMF',       $d['no_simf']);
+      row_detail('Application ID', $d['appl_id']);
+      row_detail('Status',         $d['status_simf']);
+      row_detail('UPT',            $d['upt']);
       ?>
     </table>
-    </div>
   </div>
 
   <!-- Info Lisensi -->
-  <div class="card">
-    <div class="card-header"><span class="card-title"><i class="ti ti-license" style="font-size:15px;margin-right:6px"></i>Lisensi & Masa Berlaku</span></div>
-    <div style="overflow:auto">
+  <div class="detail-card">
+    <div class="detail-card-header" style="background:#ECFDF5;color:#065f46">
+      <i class="ti ti-license" style="font-size:15px;color:#059669"></i>Lisensi & Masa Berlaku
+    </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
       row_detail('No. Lisensi',    $d['curr_lic_num']);
@@ -65,37 +89,37 @@ require_once __DIR__ . '/includes/header.php';
       row_detail('Umur ISR (thn)', $d['umur_isr']);
       ?>
     </table>
-    </div>
   </div>
 
   <!-- Info Frekuensi -->
-  <div class="card">
-    <div class="card-header"><span class="card-title"><i class="ti ti-wave-sine" style="font-size:15px;margin-right:6px"></i>Teknis Frekuensi</span></div>
-    <div style="overflow:auto">
+  <div class="detail-card">
+    <div class="detail-card-header" style="background:#FFF7ED;color:#92400e">
+      <i class="ti ti-wave-sine" style="font-size:15px;color:#D97706"></i>Teknis Frekuensi
+    </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
-      row_detail('Layanan',      $d['service']);
-      row_detail('Sub-layanan',  $d['subservice']);
-      row_detail('Trans. Type',  $d['trans_type']);
-      row_detail('Frekuensi (MHz)',  $d['freq'] !== null ? number_format($d['freq'], 3, ',', '.') : null);
+      row_detail('Layanan',        $d['service']);
+      row_detail('Sub-layanan',    $d['subservice']);
+      row_detail('Trans. Type',    $d['trans_type']);
+      row_detail('Frekuensi (MHz)', $d['freq'] !== null ? number_format($d['freq'], 3, ',', '.') : null);
       row_detail('Frekuensi Pasang', $d['freq_pair'] !== null ? number_format($d['freq_pair'], 3, ',', '.') : null);
-      row_detail('ERP (dBm)',    $d['erp_pwr_dbm']);
-      row_detail('EQ Power (W)', $d['eq_pwr']);
-      row_detail('Bandwidth',    $d['bwidth'] ?? null);
-      row_detail('Zona',         $d['zona']);
-      row_detail('Azimuth',      $d['azim']);
-      row_detail('Tinggi Antena',$d['hgt_ant'] ? $d['hgt_ant'] . ' m' : null);
-      row_detail('H-ASL',        $d['h_asl'] ? $d['h_asl'] . ' m' : null);
-      row_detail('Jml. Set',     $d['num_sets']);
+      row_detail('ERP (dBm)',      $d['erp_pwr_dbm']);
+      row_detail('EQ Power (W)',   $d['eq_pwr']);
+      row_detail('Bandwidth',      $d['bwidth'] ?? null);
+      row_detail('Zona',           $d['zona']);
+      row_detail('Azimuth',        $d['azim']);
+      row_detail('Tinggi Antena',  $d['hgt_ant'] ? $d['hgt_ant'] . ' m' : null);
+      row_detail('H-ASL',          $d['h_asl'] ? $d['h_asl'] . ' m' : null);
+      row_detail('Jml. Set',       $d['num_sets']);
       ?>
     </table>
-    </div>
   </div>
 
   <!-- Info Perangkat -->
-  <div class="card">
-    <div class="card-header"><span class="card-title"><i class="ti ti-device-desktop" style="font-size:15px;margin-right:6px"></i>Perangkat & Lokasi</span></div>
-    <div style="overflow:auto">
+  <div class="detail-card">
+    <div class="detail-card-header" style="background:#FDF2F8;color:#9d174d">
+      <i class="ti ti-device-desktop" style="font-size:15px;color:#DB2777"></i>Perangkat & Lokasi
+    </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
       row_detail('Produsen Perangkat', $d['eq_mfr']);
@@ -106,37 +130,36 @@ require_once __DIR__ . '/includes/header.php';
       row_detail('Jenis Perangkat',    $d['equip_type']);
       row_detail('BHP',                $d['bhp'] ?? null);
       ?>
-      <tr><td colspan="2" style="padding:8px 12px;border-top:0.5px solid var(--border)">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Nama Stasiun</div>
-        <div style="font-size:13px"><?= htmlspecialchars($d['stn_name'] ?? '—') ?></div>
+      <tr><td colspan="2" style="padding:8px 12px;border-top:0.5px solid #c7d2fe">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Nama Stasiun</div>
+        <div style="font-size:12px;color:#1e1b4b"><?= htmlspecialchars($d['stn_name'] ?? '—') ?></div>
+      </td></tr>
+      <tr style="background:#F5F7FF"><td colspan="2" style="padding:8px 12px">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Alamat Stasiun</div>
+        <div style="font-size:12px;color:#1e1b4b"><?= htmlspecialchars($d['stn_addr'] ?? '—') ?></div>
       </td></tr>
       <tr><td colspan="2" style="padding:8px 12px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Alamat Stasiun</div>
-        <div style="font-size:13px"><?= htmlspecialchars($d['stn_addr'] ?? '—') ?></div>
-      </td></tr>
-      <tr><td colspan="2" style="padding:8px 12px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Lokasi Administratif</div>
-        <div style="font-size:13px">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Lokasi Administratif</div>
+        <div style="font-size:12px;color:#1e1b4b">
           <?= htmlspecialchars(implode(', ', array_filter([$d['village'], $d['district'], $d['city'], $d['province']]))) ?>
         </div>
       </td></tr>
-      <tr><td colspan="2" style="padding:8px 12px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Koordinat</div>
-        <div style="font-size:13px;font-family:monospace">
-          <?= $d['sid_lat'] ?>, <?= $d['sid_long'] ?>
-        </div>
+      <tr style="background:#F5F7FF"><td colspan="2" style="padding:8px 12px">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Koordinat</div>
+        <div style="font-size:12px;font-family:monospace;color:#4F46E5"><?= $d['sid_lat'] ?>, <?= $d['sid_long'] ?></div>
       </td></tr>
     </table>
-    </div>
   </div>
 
 </div>
 
 <!-- Mini map -->
 <?php if ($d['sid_lat'] && $d['sid_long']): ?>
-<div class="card" style="margin-top:16px">
-  <div class="card-header"><span class="card-title"><i class="ti ti-map-pin" style="font-size:15px;margin-right:6px"></i>Lokasi Stasiun</span></div>
-  <div id="minimap" style="height:280px;border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden"></div>
+<div class="detail-card" style="margin-top:12px">
+  <div class="detail-card-header" style="background:#EFF6FF;color:#1e40af">
+    <i class="ti ti-map-pin" style="font-size:15px;color:#2563EB"></i>Lokasi Stasiun
+  </div>
+  <div id="minimap" style="height:280px;border-radius:0 0 12px 12px;overflow:hidden"></div>
 </div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
