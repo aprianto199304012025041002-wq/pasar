@@ -12,15 +12,15 @@ $tgl_query = $tgl_query_raw
     : '—';
 
 // ── Statistik utama ───────────────────────────────────────────
-$total      = $pdo->query("SELECT COUNT(*) FROM isr")->fetchColumn();
-$n_prov     = $pdo->query("SELECT COUNT(DISTINCT province) FROM isr WHERE province IS NOT NULL AND province != ''")->fetchColumn();
-$n_city     = $pdo->query("SELECT COUNT(DISTINCT city)     FROM isr WHERE city     IS NOT NULL AND city     != ''")->fetchColumn();
-$n_dist     = $pdo->query("SELECT COUNT(DISTINCT district) FROM isr WHERE district IS NOT NULL AND district != ''")->fetchColumn();
+$total   = $pdo->query("SELECT COUNT(*) FROM isr")->fetchColumn();
+$n_prov  = $pdo->query("SELECT COUNT(DISTINCT province) FROM isr WHERE province IS NOT NULL AND province != ''")->fetchColumn();
+$n_city  = $pdo->query("SELECT COUNT(DISTINCT city)     FROM isr WHERE city     IS NOT NULL AND city     != ''")->fetchColumn();
+$n_dist  = $pdo->query("SELECT COUNT(DISTINCT district) FROM isr WHERE district IS NOT NULL AND district != ''")->fetchColumn();
 
 // Per service
 $by_svc  = $pdo->query("SELECT service, COUNT(*) AS cnt FROM isr GROUP BY service ORDER BY cnt DESC")->fetchAll();
 
-// Per subservice (dengan label service induk)
+// Per subservice
 $by_sub  = $pdo->query(
     "SELECT subservice, service, COUNT(*) AS cnt FROM isr
      WHERE subservice IS NOT NULL AND subservice != ''
@@ -43,13 +43,12 @@ $by_clnt = $pdo->query(
      GROUP BY clnt_name ORDER BY cnt DESC LIMIT 10"
 )->fetchAll();
 
-// ISR segera habis (masa_laku < 1 tahun ke depan)
+// ISR segera habis
 $expiring = $pdo->query(
     "SELECT COUNT(*) FROM isr WHERE masa_laku IS NOT NULL
      AND STR_TO_DATE(masa_laku,'%d-%b-%y') BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 YEAR)"
 )->fetchColumn();
 
-// Map service → warna & label
 $svc_map = [
     'Fixed Service'         => ['color' => '#185FA5', 'label' => 'Fixed Service'],
     'Land Mobile (public)'  => ['color' => '#EF9F27', 'label' => 'LM Public'],
@@ -61,6 +60,8 @@ $svc_map = [
 
 $max_svc = !empty($by_svc) ? $by_svc[0]['cnt'] : 1;
 $max_sub = !empty($by_sub) ? $by_sub[0]['cnt'] : 1;
+$max_d   = !empty($by_dist) ? $by_dist[0]['cnt'] : 1;
+$max_c   = !empty($by_clnt) ? $by_clnt[0]['cnt'] : 1;
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -70,7 +71,7 @@ require_once __DIR__ . '/includes/header.php';
   <div class="page-sub">Ringkasan data ISR per query <?= htmlspecialchars($tgl_query) ?></div>
 </div>
 
-<!-- ── Panel 1: Ringkasan utama ─────────────────────────────── -->
+<!-- ── Panel 1: Hero stats ───────────────────────────────────── -->
 <div class="stat-grid-hero">
   <div class="stat-card blue">
     <div class="stat-label">Total ISR</div>
@@ -94,75 +95,69 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-<!-- ── Panel 2: Per service ──────────────────────────────────── -->
-<div class="card" style="margin-bottom:16px">
-  <div class="card-header">
-    <span class="card-title">ISR per Service</span>
-  </div>
-  <div class="card-body">
-    <div class="bar-list">
-      <?php foreach ($by_svc as $s):
-        $meta  = $svc_map[$s['service']] ?? ['color'=>'#888780','label'=>$s['service']];
-        $pct   = $total > 0 ? round($s['cnt'] / $total * 100, 1) : 0;
-        $width = $max_svc > 0 ? round($s['cnt'] / $max_svc * 100) : 0;
-      ?>
-      <div class="bar-item">
-        <div class="bar-label"><?= htmlspecialchars($meta['label']) ?></div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:<?= $width ?>%;background:<?= $meta['color'] ?>"></div>
-        </div>
-        <div class="bar-val">
-          <?= number_format($s['cnt'], 0, ',', '.') ?>
-          <span class="bar-pct"><?= $pct ?>%</span>
-        </div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
-</div>
-
-<!-- ── Panel 3: Per subservice ───────────────────────────────── -->
-<div class="card" style="margin-bottom:16px">
-  <div class="card-header">
-    <span class="card-title">ISR per Subservice</span>
-  </div>
-  <div class="card-body">
-    <div class="bar-list">
-      <?php foreach ($by_sub as $s):
-        $meta  = $svc_map[$s['service']] ?? ['color'=>'#888780','label'=>$s['service']];
-        $pct   = $total > 0 ? round($s['cnt'] / $total * 100, 1) : 0;
-        $width = $max_sub > 0 ? round($s['cnt'] / $max_sub * 100) : 0;
-      ?>
-      <div class="bar-item">
-        <div class="bar-label">
-          <span class="sub-dot" style="background:<?= $meta['color'] ?>" title="<?= htmlspecialchars($meta['label']) ?>"></span>
-          <?= htmlspecialchars($s['subservice']) ?>
-        </div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:<?= $width ?>%;background:<?= $meta['color'] ?>"></div>
-        </div>
-        <div class="bar-val">
-          <?= number_format($s['cnt'], 0, ',', '.') ?>
-          <span class="bar-pct"><?= $pct ?>%</span>
-        </div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
-</div>
-
-<!-- ── Charts grid (kecamatan, entitas, provinsi, donut) ─────── -->
-<div class="dash-grid">
+<!-- ── Panel 2+3: Service & Subservice (2 kolom di desktop) ──── -->
+<div class="svc-grid">
 
   <div class="card">
-    <div class="card-header">
-      <span class="card-title">ISR per kecamatan (top 10)</span>
-    </div>
+    <div class="card-header"><span class="card-title">ISR per Service</span></div>
     <div class="card-body">
       <div class="bar-list">
-        <?php
-        $max_d = $by_dist[0]['cnt'] ?? 1;
-        foreach ($by_dist as $d): ?>
+        <?php foreach ($by_svc as $s):
+          $meta  = $svc_map[$s['service']] ?? ['color'=>'#888780','label'=>$s['service']];
+          $pct   = $total > 0 ? round($s['cnt'] / $total * 100, 1) : 0;
+          $width = $max_svc > 0 ? round($s['cnt'] / $max_svc * 100) : 0;
+        ?>
+        <div class="bar-item">
+          <div class="bar-label"><?= htmlspecialchars($meta['label']) ?></div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:<?= $width ?>%;background:<?= $meta['color'] ?>"></div>
+          </div>
+          <div class="bar-val">
+            <?= number_format($s['cnt'], 0, ',', '.') ?>
+            <span class="bar-pct"><?= $pct ?>%</span>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">ISR per Subservice</span></div>
+    <div class="card-body">
+      <div class="bar-list">
+        <?php foreach ($by_sub as $s):
+          $meta  = $svc_map[$s['service']] ?? ['color'=>'#888780','label'=>$s['service']];
+          $pct   = $total > 0 ? round($s['cnt'] / $total * 100, 1) : 0;
+          $width = $max_sub > 0 ? round($s['cnt'] / $max_sub * 100) : 0;
+        ?>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="sub-dot" style="background:<?= $meta['color'] ?>" title="<?= htmlspecialchars($meta['label']) ?>"></span><?= htmlspecialchars($s['subservice']) ?>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:<?= $width ?>%;background:<?= $meta['color'] ?>"></div>
+          </div>
+          <div class="bar-val">
+            <?= number_format($s['cnt'], 0, ',', '.') ?>
+            <span class="bar-pct"><?= $pct ?>%</span>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Panel 4: Kecamatan, Entitas, Provinsi, Donut ─────────── -->
+<div class="dash-grid" style="margin-top:12px">
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">ISR per kecamatan (top 10)</span></div>
+    <div class="card-body">
+      <div class="bar-list">
+        <?php foreach ($by_dist as $d): ?>
         <div class="bar-item">
           <div class="bar-label" title="<?= htmlspecialchars($d['district']) ?> — <?= htmlspecialchars($d['city']) ?>">
             <?= htmlspecialchars($d['district']) ?>
@@ -178,14 +173,10 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 
   <div class="card">
-    <div class="card-header">
-      <span class="card-title">Entitas terbanyak (top 10)</span>
-    </div>
+    <div class="card-header"><span class="card-title">Entitas terbanyak (top 10)</span></div>
     <div class="card-body">
       <div class="bar-list">
-        <?php
-        $max_c = $by_clnt[0]['cnt'] ?? 1;
-        foreach ($by_clnt as $c): ?>
+        <?php foreach ($by_clnt as $c): ?>
         <div class="bar-item">
           <div class="bar-label" title="<?= htmlspecialchars($c['clnt_name']) ?>">
             <?= htmlspecialchars($c['clnt_name']) ?>
@@ -201,21 +192,17 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 
   <div class="card">
-    <div class="card-header">
-      <span class="card-title">Sebaran provinsi</span>
-    </div>
+    <div class="card-header"><span class="card-title">Sebaran provinsi</span></div>
     <div class="card-body">
       <?php foreach ($by_prov as $p): ?>
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
           <span><?= htmlspecialchars($p['province']) ?></span>
-          <span style="font-weight:500"><?= number_format($p['cnt'],0,',','.') ?>
-            <span style="color:var(--muted);font-weight:400;font-size:11px">
-              (<?= round($p['cnt']/$total*100,1) ?>%)
-            </span>
+          <span style="font-weight:600"><?= number_format($p['cnt'],0,',','.') ?>
+            <span style="color:var(--muted);font-weight:400;font-size:10.5px"> (<?= round($p['cnt']/$total*100,1) ?>%)</span>
           </span>
         </div>
-        <div class="bar-track" style="height:10px">
+        <div class="bar-track" style="height:8px">
           <div class="bar-fill" style="width:<?= round($p['cnt']/$total*100) ?>%;background:#7F77DD"></div>
         </div>
       </div>
@@ -224,11 +211,9 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 
   <div class="card">
-    <div class="card-header">
-      <span class="card-title">Komposisi layanan</span>
-    </div>
-    <div class="card-body">
-      <canvas id="pieChart" style="max-height:220px"></canvas>
+    <div class="card-header"><span class="card-title">Komposisi layanan</span></div>
+    <div class="card-body" style="display:flex;align-items:center;justify-content:center">
+      <canvas id="pieChart" style="max-height:200px;max-width:100%"></canvas>
     </div>
   </div>
 
@@ -246,7 +231,7 @@ require_once __DIR__ . '/includes/header.php';
     options: {
       responsive: true, maintainAspectRatio: true,
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } },
+        legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 10 } },
         tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.parsed.toLocaleString('id-ID'); } } }
       }
     }
