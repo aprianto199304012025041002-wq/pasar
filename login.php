@@ -61,10 +61,10 @@ $login_url = SSO_URL . '?client_id=' . urlencode(SSO_CLIENT_ID);
     </div>
     <a href="<?= htmlspecialchars($login_url) ?>" class="btn-sso" style="background:#4F46E5">
       <i class="ti ti-login" style="font-size:18px"></i>
-      Masuk dengan GUDEG JOGJA SSO
+      Masuk dengan GUDEG JOGJA
     </a>
     <p style="margin-top:16px;font-size:11px;color:var(--muted)">
-      Akses hanya untuk petugas Balmon yang terdaftar
+      Akses hanya untuk petugas yang terdaftar
     </p>
   </div>
   <p style="font-size:12px;color:#6366f1">© 2026 QOS Balmon Jogja Team</p>
