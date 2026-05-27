@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 
-// Auth check
 if (!is_logged_in()) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
@@ -11,9 +10,7 @@ if (!is_logged_in()) {
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Filter by service
 $service = trim($_GET['service'] ?? '');
-
 $allowed = ['Fixed Service','Land Mobile (public)','Land Mobile (private)','Broadcast','Aeronautical','Other Services'];
 $params  = [];
 $where   = "WHERE sid_lat IS NOT NULL AND sid_long IS NOT NULL
@@ -24,12 +21,10 @@ if ($service !== '' && in_array($service, $allowed, true)) {
     $params[] = $service;
 }
 
-// Group by location to reduce marker density — one point per unique lat/long/service
 $sql = "SELECT sid_lat, sid_long, service, clnt_name, stn_name,
                freq, city, district, curr_lic_num, id
         FROM isr $where
-        ORDER BY id ASC
-        LIMIT 5000";
+        ORDER BY id ASC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);

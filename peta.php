@@ -93,7 +93,6 @@ function makeIcon(color) {
   });
 }
 
-// Init map — center Yogyakarta
 var map = L.map('map').setView([-7.797, 110.370], 10);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -101,18 +100,15 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18
 }).addTo(map);
 
-// Cluster group
 var clusterGroup = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 50 });
 map.addLayer(clusterGroup);
-var useCluster = true;
-var plainGroup  = L.layerGroup();
-var currentMarkers = [];
+var useCluster    = true;
+var plainGroup    = L.layerGroup();
 var currentService = '';
 
 function loadMarkers(service) {
   clusterGroup.clearLayers();
   plainGroup.clearLayers();
-  currentMarkers = [];
   document.getElementById('map-count').textContent = 'Memuat...';
 
   var url = '<?= APP_BASE_URL ?>/api/geojson.php' + (service ? '?service=' + encodeURIComponent(service) : '');
@@ -123,7 +119,7 @@ function loadMarkers(service) {
       if (!data.features) return;
 
       data.features.forEach(function(f) {
-        var p    = f.properties;
+        var p      = f.properties;
         var latlng = [f.geometry.coordinates[1], f.geometry.coordinates[0]];
         var color  = SERVICE_COLORS[p.service] || '#888780';
         var icon   = makeIcon(color);
@@ -134,10 +130,10 @@ function loadMarkers(service) {
           + (p.lic ? '<div class="pop-meta" style="font-family:monospace;font-size:10px">' + p.lic + '</div>' : '')
           + '<div style="margin-top:6px"><a href="<?= APP_BASE_URL ?>/detail.php?id=' + p.id + '" style="color:var(--blue);font-size:12px">Lihat detail →</a></div>';
 
-        var marker = L.marker(latlng, { icon: icon }).bindPopup(popup);
-        currentMarkers.push(marker);
-        clusterGroup.addLayer(marker);
-        plainGroup.addLayer(L.marker(latlng, { icon: icon }).bindPopup(popup));
+        var m1 = L.marker(latlng, { icon: icon }).bindPopup(popup);
+        var m2 = L.marker(latlng, { icon: makeIcon(color) }).bindPopup(popup);
+        clusterGroup.addLayer(m1);
+        plainGroup.addLayer(m2);
       });
 
       document.getElementById('map-count').textContent = data.total.toLocaleString('id-ID') + ' stasiun ditampilkan';
@@ -147,7 +143,6 @@ function loadMarkers(service) {
     });
 }
 
-// Initial load
 loadMarkers('');
 
 // Filter buttons
@@ -172,6 +167,15 @@ document.getElementById('btn-cluster').addEventListener('click', function() {
     map.addLayer(plainGroup);
   }
 });
+
+// Fix: invalidate map size when sidebar opens/closes (mobile & desktop)
+var sidebar = document.getElementById('sidebar');
+if (sidebar) {
+  var observer = new MutationObserver(function() {
+    setTimeout(function() { map.invalidateSize(); }, 260);
+  });
+  observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+}
 
 })();
 </script>
