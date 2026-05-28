@@ -1326,3 +1326,192 @@ tbody tr:hover {
 .leaflet-control {
     z-index: 20 !important;
 }
+
+/* ── Dashboard stat 3 ────────────────────────────────────────── */
+.dash-stat3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 479px) {
+    .dash-stat3 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+        .dash-stat3 .stat-card:last-child {
+            grid-column: 1 / -1;
+        }
+}
+
+/* ── Dashboard section spacing ───────────────────────────────── */
+.dash-section {
+    margin-bottom: 12px;
+}
+
+/* ── Card hint (kecil di kanan header) ───────────────────────── */
+.card-hint {
+    font-size: 10px;
+    color: var(--muted);
+}
+
+/* ── Expand rows ─────────────────────────────────────────────── */
+.dash-barlist {
+    padding: 0 14px;
+}
+
+@media (min-width: 768px) {
+    .dash-barlist {
+        padding: 0 16px;
+    }
+}
+
+.expand-row {
+    display: grid;
+    grid-template-columns: 130px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 12px;
+}
+
+    .expand-row:last-child {
+        border-bottom: none;
+    }
+
+@media (max-width: 479px) {
+    .expand-row {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 3px 8px;
+    }
+
+        .expand-row .er-label {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .expand-row .er-val {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .expand-row .bar-track {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+}
+
+.expand-row[onclick] {
+    cursor: pointer;
+}
+
+    .expand-row[onclick]:hover .er-label {
+        color: var(--blue);
+    }
+
+.er-label {
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.er-chev {
+    font-size: 11px;
+    color: var(--muted);
+    transition: transform 0.18s ease;
+    flex-shrink: 0;
+}
+
+    .er-chev.open {
+        transform: rotate(90deg);
+    }
+
+.er-val {
+    text-align: right;
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 60px;
+    font-size: 12px;
+}
+
+/* ── Expand children ─────────────────────────────────────────── */
+.expand-children {
+    display: none;
+    background: var(--bg);
+    border-radius: var(--radius);
+    margin: 2px 0 4px;
+    padding: 0 10px;
+}
+
+    .expand-children.open {
+        display: block;
+    }
+
+.indent1 .er-label {
+    padding-left: 10px;
+    font-size: 11.5px;
+}
+
+.indent1 .er-val {
+    font-size: 11px;
+}
+
+.indent2 .er-label {
+    padding-left: 10px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.indent2 .er-val {
+    font-size: 10.5px;
+}
+
+/* ── Nested expand (kecamatan dalam kabupaten) ───────────────── */
+.expand-children .expand-children {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    margin: 2px 0 4px;
+    padding: 0 8px;
+}
+
+/* ── Client search ───────────────────────────────────────────── */
+.dash-search {
+    width: 100%;
+    border: 0.5px solid var(--border-md);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: unset;
+}
+
+    .dash-search:focus {
+        border-color: var(--blue-bd);
+        box-shadow: 0 0 0 3px rgba(55,138,221,0.10);
+    }
+
+/* ── Client scrollable list ──────────────────────────────────── */
+.dash-scroll {
+    max-height: 320px;
+    overflow-y: auto;
+    padding-bottom: 4px;
+}
+
+@media (min-width: 768px) {
+    .dash-scroll {
+        max-height: 400px;
+    }
+}

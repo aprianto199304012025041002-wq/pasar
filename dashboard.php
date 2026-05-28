@@ -5,50 +5,64 @@ require_login();
 
 $page_title = 'Dashboard';
 
-// ── Tanggal query (dinamis) ────────────────────────────────────
+// ── Tanggal query ─────────────────────────────────────────────
 $tgl_query_raw = $pdo->query("SELECT MAX(TGL_QUERY) FROM isr")->fetchColumn();
-$tgl_query = $tgl_query_raw
-    ? (new DateTime($tgl_query_raw))->format('d F Y')
-    : '—';
+$tgl_query = $tgl_query_raw ? (new DateTime($tgl_query_raw))->format('d M Y') : '—';
 
 // ── Statistik utama ───────────────────────────────────────────
-$total   = $pdo->query("SELECT COUNT(*) FROM isr")->fetchColumn();
-$n_prov  = $pdo->query("SELECT COUNT(DISTINCT province) FROM isr WHERE province IS NOT NULL AND province != ''")->fetchColumn();
-$n_city  = $pdo->query("SELECT COUNT(DISTINCT city)     FROM isr WHERE city     IS NOT NULL AND city     != ''")->fetchColumn();
-$n_dist  = $pdo->query("SELECT COUNT(DISTINCT district) FROM isr WHERE district IS NOT NULL AND district != ''")->fetchColumn();
+$total      = $pdo->query("SELECT COUNT(*) FROM isr")->fetchColumn();
+$n_klien    = $pdo->query("SELECT COUNT(DISTINCT clnt_name) FROM isr WHERE clnt_name IS NOT NULL AND clnt_name != ''")->fetchColumn();
 
-// Per service
-$by_svc  = $pdo->query("SELECT service, COUNT(*) AS cnt FROM isr GROUP BY service ORDER BY cnt DESC")->fetchAll();
+// ── Per service + subservice ──────────────────────────────────
+$by_svc = $pdo->query("SELECT service, COUNT(*) AS cnt FROM isr GROUP BY service ORDER BY cnt DESC")->fetchAll();
 
-// Per subservice
-$by_sub  = $pdo->query(
-    "SELECT subservice, service, COUNT(*) AS cnt FROM isr
+// Group subservice per service
+$sub_raw = $pdo->query(
+    "SELECT service, subservice, COUNT(*) AS cnt FROM isr
      WHERE subservice IS NOT NULL AND subservice != ''
-     GROUP BY subservice, service ORDER BY cnt DESC"
+     GROUP BY service, subservice ORDER BY service, cnt DESC"
+)->fetchAll();
+$sub_by_svc = [];
+foreach ($sub_raw as $r) {
+    $sub_by_svc[$r['service']][] = $r;
+}
+
+// ── Wilayah: provinsi → kab → kecamatan ──────────────────────
+$by_prov = $pdo->query(
+    "SELECT province, COUNT(*) AS cnt FROM isr
+     WHERE province IS NOT NULL AND province != ''
+     GROUP BY province ORDER BY cnt DESC"
 )->fetchAll();
 
-// Per provinsi
-$by_prov = $pdo->query("SELECT province, COUNT(*) AS cnt FROM isr GROUP BY province ORDER BY cnt DESC")->fetchAll();
+$by_city = $pdo->query(
+    "SELECT province, city, COUNT(*) AS cnt FROM isr
+     WHERE city IS NOT NULL AND city != ''
+     GROUP BY province, city ORDER BY province, cnt DESC"
+)->fetchAll();
+$city_by_prov = [];
+foreach ($by_city as $r) {
+    $city_by_prov[$r['province']][] = $r;
+}
 
-// Top 10 kecamatan
 $by_dist = $pdo->query(
-    "SELECT district, city, COUNT(*) AS cnt FROM isr
+    "SELECT province, city, district, COUNT(*) AS cnt FROM isr
      WHERE district IS NOT NULL AND district != ''
-     GROUP BY district, city ORDER BY cnt DESC LIMIT 10"
+     GROUP BY province, city, district ORDER BY city, cnt DESC"
 )->fetchAll();
+$dist_by_city = [];
+foreach ($by_dist as $r) {
+    $dist_by_city[$r['city']][] = $r;
+}
 
-// Top 10 entitas
+// ── Semua klien ───────────────────────────────────────────────
 $by_clnt = $pdo->query(
     "SELECT clnt_name, COUNT(*) AS cnt FROM isr
-     GROUP BY clnt_name ORDER BY cnt DESC LIMIT 10"
+     WHERE clnt_name IS NOT NULL AND clnt_name != ''
+     GROUP BY clnt_name ORDER BY cnt DESC"
 )->fetchAll();
+$max_c = !empty($by_clnt) ? $by_clnt[0]['cnt'] : 1;
 
-// ISR segera habis
-$expiring = $pdo->query(
-    "SELECT COUNT(*) FROM isr WHERE masa_laku IS NOT NULL
-     AND STR_TO_DATE(masa_laku,'%d-%b-%y') BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 YEAR)"
-)->fetchColumn();
-
+// ── Helpers ───────────────────────────────────────────────────
 $svc_map = [
     'Fixed Service'         => ['color' => '#185FA5', 'label' => 'Fixed Service'],
     'Land Mobile (public)'  => ['color' => '#EF9F27', 'label' => 'LM Public'],
@@ -57,186 +71,170 @@ $svc_map = [
     'Aeronautical'          => ['color' => '#1D9E75', 'label' => 'Aeronautical'],
     'Other Services'        => ['color' => '#888780', 'label' => 'Lainnya'],
 ];
-
-$max_svc = !empty($by_svc) ? $by_svc[0]['cnt'] : 1;
-$max_sub = !empty($by_sub) ? $by_sub[0]['cnt'] : 1;
-$max_d   = !empty($by_dist) ? $by_dist[0]['cnt'] : 1;
-$max_c   = !empty($by_clnt) ? $by_clnt[0]['cnt'] : 1;
+$max_svc  = !empty($by_svc)  ? $by_svc[0]['cnt']  : 1;
+$max_prov = !empty($by_prov) ? $by_prov[0]['cnt']  : 1;
 
 require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="page-title">
   Dashboard
-  <div class="page-sub">Ringkasan data ISR per query <?= htmlspecialchars($tgl_query) ?></div>
+  <div class="page-sub">Ringkasan data ISR</div>
 </div>
 
-<!-- ── Panel 1: Hero stats ───────────────────────────────────── -->
-<div class="stat-grid-hero">
+<!-- ── Panel 1: 3 stat ───────────────────────────────────────── -->
+<div class="dash-stat3">
   <div class="stat-card blue">
     <div class="stat-label">Total ISR</div>
     <div class="stat-val"><?= number_format($total, 0, ',', '.') ?></div>
     <div class="stat-sub">seluruh layanan</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Provinsi</div>
-    <div class="stat-val"><?= (int)$n_prov ?></div>
-    <div class="stat-sub">wilayah</div>
+    <div class="stat-label">Total Klien</div>
+    <div class="stat-val"><?= number_format($n_klien, 0, ',', '.') ?></div>
+    <div class="stat-sub">entitas unik</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Kab / Kota</div>
-    <div class="stat-val"><?= (int)$n_city ?></div>
-    <div class="stat-sub">wilayah</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-label">Kecamatan</div>
-    <div class="stat-val"><?= (int)$n_dist ?></div>
-    <div class="stat-sub">wilayah</div>
+    <div class="stat-label">Tanggal Query</div>
+    <div class="stat-val" style="font-size:18px"><?= htmlspecialchars($tgl_query) ?></div>
+    <div class="stat-sub">data diambil</div>
   </div>
 </div>
 
-<!-- ── Panel 2+3: Service & Subservice (2 kolom di desktop) ──── -->
-<div class="svc-grid">
-
-  <div class="card">
-    <div class="card-header"><span class="card-title">ISR per Service</span></div>
-    <div class="card-body">
-      <div class="bar-list">
-        <?php foreach ($by_svc as $s):
-          $meta  = $svc_map[$s['service']] ?? ['color'=>'#888780','label'=>$s['service']];
-          $pct   = $total > 0 ? round($s['cnt'] / $total * 100, 1) : 0;
-          $width = $max_svc > 0 ? round($s['cnt'] / $max_svc * 100) : 0;
+<!-- ── Panel 2: Wilayah expandable ───────────────────────────── -->
+<div class="card dash-section">
+  <div class="card-header">
+    <span class="card-title">Sebaran wilayah</span>
+    <span class="card-hint">klik untuk expand</span>
+  </div>
+  <div class="dash-barlist">
+    <?php foreach ($by_prov as $pi => $prov):
+      $wp = $max_prov > 0 ? round($prov['cnt'] / $max_prov * 100) : 0;
+      $pct_p = $total > 0 ? round($prov['cnt'] / $total * 100, 1) : 0;
+      $kabs  = $city_by_prov[$prov['province']] ?? [];
+      $max_kab = !empty($kabs) ? $kabs[0]['cnt'] : 1;
+      $pid = 'prov_' . $pi;
+    ?>
+    <div class="expand-row" onclick="toggleExpand('<?= $pid ?>')">
+      <div class="er-label">
+        <i class="ti ti-chevron-right er-chev" id="chev_<?= $pid ?>"></i>
+        <?= htmlspecialchars($prov['province']) ?>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:<?= $wp ?>%;background:#185FA5"></div></div>
+      <div class="er-val"><?= number_format($prov['cnt'], 0, ',', '.') ?> <span class="bar-pct"><?= $pct_p ?>%</span></div>
+    </div>
+    <div class="expand-children" id="<?= $pid ?>">
+      <?php foreach ($kabs as $ki => $kab):
+        $wk = $max_kab > 0 ? round($kab['cnt'] / $max_kab * 100) : 0;
+        $pct_k = $total > 0 ? round($kab['cnt'] / $total * 100, 1) : 0;
+        $kecs  = $dist_by_city[$kab['city']] ?? [];
+        $max_kec = !empty($kecs) ? $kecs[0]['cnt'] : 1;
+        $kid = 'kab_' . $pi . '_' . $ki;
+      ?>
+      <div class="expand-row indent1" onclick="toggleExpand('<?= $kid ?>');event.stopPropagation()">
+        <div class="er-label">
+          <i class="ti ti-chevron-right er-chev" id="chev_<?= $kid ?>"></i>
+          <?= htmlspecialchars($kab['city']) ?>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:<?= $wk ?>%;background:#7F77DD"></div></div>
+        <div class="er-val"><?= number_format($kab['cnt'], 0, ',', '.') ?> <span class="bar-pct"><?= $pct_k ?>%</span></div>
+      </div>
+      <div class="expand-children" id="<?= $kid ?>">
+        <?php foreach ($kecs as $kec):
+          $wkc = $max_kec > 0 ? round($kec['cnt'] / $max_kec * 100) : 0;
+          $pct_kc = $total > 0 ? round($kec['cnt'] / $total * 100, 1) : 0;
         ?>
-        <div class="bar-item">
-          <div class="bar-label"><?= htmlspecialchars($meta['label']) ?></div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width:<?= $width ?>%;background:<?= $meta['color'] ?>"></div>
-          </div>
-          <div class="bar-val">
-            <?= number_format($s['cnt'], 0, ',', '.') ?>
-            <span class="bar-pct"><?= $pct ?>%</span>
-          </div>
+        <div class="expand-row indent2">
+          <div class="er-label"><?= htmlspecialchars($kec['district']) ?></div>
+          <div class="bar-track"><div class="bar-fill" style="width:<?= $wkc ?>%;background:#1D9E75;opacity:.7"></div></div>
+          <div class="er-val"><?= number_format($kec['cnt'], 0, ',', '.') ?> <span class="bar-pct"><?= $pct_kc ?>%</span></div>
         </div>
         <?php endforeach; ?>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><span class="card-title">ISR per Subservice</span></div>
-    <div class="card-body">
-      <div class="bar-list">
-        <?php foreach ($by_sub as $s):
-          $meta  = $svc_map[$s['service']] ?? ['color'=>'#888780','label'=>$s['service']];
-          $pct   = $total > 0 ? round($s['cnt'] / $total * 100, 1) : 0;
-          $width = $max_sub > 0 ? round($s['cnt'] / $max_sub * 100) : 0;
-        ?>
-        <div class="bar-item">
-          <div class="bar-label">
-            <span class="sub-dot" style="background:<?= $meta['color'] ?>" title="<?= htmlspecialchars($meta['label']) ?>"></span><?= htmlspecialchars($s['subservice']) ?>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width:<?= $width ?>%;background:<?= $meta['color'] ?>"></div>
-          </div>
-          <div class="bar-val">
-            <?= number_format($s['cnt'], 0, ',', '.') ?>
-            <span class="bar-pct"><?= $pct ?>%</span>
-          </div>
-        </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ── Panel 4: Kecamatan, Entitas, Provinsi, Donut ─────────── -->
-<div class="dash-grid" style="margin-top:12px">
-
-  <div class="card">
-    <div class="card-header"><span class="card-title">ISR per kecamatan (top 10)</span></div>
-    <div class="card-body">
-      <div class="bar-list">
-        <?php foreach ($by_dist as $d): ?>
-        <div class="bar-item">
-          <div class="bar-label" title="<?= htmlspecialchars($d['district']) ?> — <?= htmlspecialchars($d['city']) ?>">
-            <?= htmlspecialchars($d['district']) ?>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width:<?= round($d['cnt']/$max_d*100) ?>%"></div>
-          </div>
-          <div class="bar-val"><?= number_format($d['cnt'], 0, ',', '.') ?></div>
-        </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><span class="card-title">Entitas terbanyak (top 10)</span></div>
-    <div class="card-body">
-      <div class="bar-list">
-        <?php foreach ($by_clnt as $c): ?>
-        <div class="bar-item">
-          <div class="bar-label" title="<?= htmlspecialchars($c['clnt_name']) ?>">
-            <?= htmlspecialchars($c['clnt_name']) ?>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width:<?= round($c['cnt']/$max_c*100) ?>%;background:#1D9E75"></div>
-          </div>
-          <div class="bar-val"><?= number_format($c['cnt'], 0, ',', '.') ?></div>
-        </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><span class="card-title">Sebaran provinsi</span></div>
-    <div class="card-body">
-      <?php foreach ($by_prov as $p): ?>
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-          <span><?= htmlspecialchars($p['province']) ?></span>
-          <span style="font-weight:600"><?= number_format($p['cnt'],0,',','.') ?>
-            <span style="color:var(--muted);font-weight:400;font-size:10.5px"> (<?= round($p['cnt']/$total*100,1) ?>%)</span>
-          </span>
-        </div>
-        <div class="bar-track" style="height:8px">
-          <div class="bar-fill" style="width:<?= round($p['cnt']/$total*100) ?>%;background:#7F77DD"></div>
-        </div>
       </div>
       <?php endforeach; ?>
     </div>
+    <?php endforeach; ?>
   </div>
-
-  <div class="card">
-    <div class="card-header"><span class="card-title">Komposisi layanan</span></div>
-    <div class="card-body" style="display:flex;align-items:center;justify-content:center">
-      <canvas id="pieChart" style="max-height:200px;max-width:100%"></canvas>
-    </div>
-  </div>
-
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- ── Panel 3: Service + Subservice expandable ───────────────── -->
+<div class="card dash-section">
+  <div class="card-header">
+    <span class="card-title">ISR per Service & Subservice</span>
+    <span class="card-hint">klik untuk expand</span>
+  </div>
+  <div class="dash-barlist">
+    <?php foreach ($by_svc as $si => $svc):
+      $meta  = $svc_map[$svc['service']] ?? ['color'=>'#888780','label'=>$svc['service']];
+      $ws    = $max_svc > 0 ? round($svc['cnt'] / $max_svc * 100) : 0;
+      $pct_s = $total > 0 ? round($svc['cnt'] / $total * 100, 1) : 0;
+      $subs  = $sub_by_svc[$svc['service']] ?? [];
+      $max_sub = !empty($subs) ? $subs[0]['cnt'] : 1;
+      $sid = 'svc_' . $si;
+    ?>
+    <div class="expand-row" onclick="toggleExpand('<?= $sid ?>')">
+      <div class="er-label">
+        <i class="ti ti-chevron-right er-chev" id="chev_<?= $sid ?>"></i>
+        <?= htmlspecialchars($meta['label']) ?>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:<?= $ws ?>%;background:<?= $meta['color'] ?>"></div></div>
+      <div class="er-val"><?= number_format($svc['cnt'], 0, ',', '.') ?> <span class="bar-pct"><?= $pct_s ?>%</span></div>
+    </div>
+    <div class="expand-children" id="<?= $sid ?>">
+      <?php foreach ($subs as $sub):
+        $wsb   = $max_sub > 0 ? round($sub['cnt'] / $max_sub * 100) : 0;
+        $pct_b = $total > 0 ? round($sub['cnt'] / $total * 100, 1) : 0;
+      ?>
+      <div class="expand-row indent1">
+        <div class="er-label"><?= htmlspecialchars($sub['subservice']) ?></div>
+        <div class="bar-track"><div class="bar-fill" style="width:<?= $wsb ?>%;background:<?= $meta['color'] ?>;opacity:.55"></div></div>
+        <div class="er-val"><?= number_format($sub['cnt'], 0, ',', '.') ?> <span class="bar-pct"><?= $pct_b ?>%</span></div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+
+<!-- ── Panel 4: Semua klien ──────────────────────────────────── -->
+<div class="card dash-section">
+  <div class="card-header">
+    <span class="card-title">Semua klien</span>
+    <span class="card-hint"><?= number_format($n_klien, 0, ',', '.') ?> entitas</span>
+  </div>
+  <div style="padding:10px 14px 4px">
+    <input type="search" id="clientSearch" placeholder="Cari nama klien..."
+           class="dash-search" oninput="filterClients()">
+  </div>
+  <div class="dash-barlist dash-scroll" id="clientList">
+    <?php foreach ($by_clnt as $c):
+      $wc = $max_c > 0 ? round($c['cnt'] / $max_c * 100) : 0;
+      $pct_c = $total > 0 ? round($c['cnt'] / $total * 100, 1) : 0;
+    ?>
+    <div class="expand-row client-row" data-name="<?= htmlspecialchars(strtolower($c['clnt_name'])) ?>">
+      <div class="er-label"><?= htmlspecialchars($c['clnt_name']) ?></div>
+      <div class="bar-track"><div class="bar-fill" style="width:<?= $wc ?>%;background:#1D9E75"></div></div>
+      <div class="er-val"><?= number_format($c['cnt'], 0, ',', '.') ?> <span class="bar-pct"><?= $pct_c ?>%</span></div>
+    </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+
 <script>
-(function() {
-  var labels = <?= json_encode(array_map(fn($s) => $svc_map[$s['service']]['label'] ?? $s['service'], $by_svc)) ?>;
-  var values = <?= json_encode(array_column($by_svc, 'cnt')) ?>;
-  var colors = ['#185FA5','#EF9F27','#7F77DD','#E24B4A','#1D9E75','#888780'];
-  new Chart(document.getElementById('pieChart'), {
-    type: 'doughnut',
-    data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 10 } },
-        tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.parsed.toLocaleString('id-ID'); } } }
-      }
-    }
+function toggleExpand(id) {
+  var el   = document.getElementById(id);
+  var chev = document.getElementById('chev_' + id);
+  if (!el) return;
+  var open = el.classList.toggle('open');
+  if (chev) chev.classList.toggle('open', open);
+}
+
+function filterClients() {
+  var q = document.getElementById('clientSearch').value.toLowerCase();
+  document.querySelectorAll('#clientList .client-row').forEach(function(row) {
+    row.style.display = row.dataset.name.includes(q) ? '' : 'none';
   });
-})();
+}
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
