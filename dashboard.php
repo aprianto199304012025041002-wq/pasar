@@ -84,7 +84,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- ── Panel 1: 3 stat ───────────────────────────────────────── -->
 <div class="dash-stat3">
-  <div class="stat-card blue">
+  <div class="stat-card">
     <div class="stat-label">Total ISR</div>
     <div class="stat-val"><?= number_format($total, 0, ',', '.') ?></div>
     <div class="stat-sub">seluruh layanan</div>
