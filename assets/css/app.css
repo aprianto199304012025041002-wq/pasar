@@ -1514,3 +1514,59 @@ tbody tr:hover {
         max-height: 400px;
     }
 }
+
+/* ── er-val: 2 kolom lurus (absolut + persen) ────────────────── */
+.er-val {
+    display: grid;
+    grid-template-columns: 54px 34px;
+    gap: 0;
+    justify-items: end;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.er-abs {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+}
+
+.er-pct {
+    font-size: 10.5px;
+    color: var(--muted);
+    text-align: right;
+}
+
+/* mobile: sembunyikan bar-track, er-val tetap 2 kolom */
+@media (max-width: 479px) {
+    .expand-row {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 3px 8px;
+    }
+
+        .expand-row .er-label {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .expand-row .er-val {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .expand-row .bar-track {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+
+    .expand-children .expand-row .bar-track {
+        display: none;
+    }
+
+    .expand-children .expand-row {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto;
+    }
+}
