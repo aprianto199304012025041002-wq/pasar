@@ -59,11 +59,11 @@ require_once __DIR__ . '/includes/header.php';
   <!-- Info Entitas -->
   <div class="detail-card">
     <div class="detail-card-header" style="background:#EEF2FF;color:#3730a3">
-      <i class="ti ti-building" style="font-size:15px;color:#4F46E5"></i>Informasi Entitas
+      <i class="ti ti-building" style="font-size:15px;color:#4F46E5"></i>Informasi Klien
     </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
-      row_detail('Nama Entitas',   $d['clnt_name']);
+      row_detail('Nama Klien',     $d['clnt_name']);
       row_detail('Client ID',      $d['clnt_id']);
       row_detail('No. SIMF',       $d['no_simf']);
       row_detail('Application ID', $d['appl_id']);

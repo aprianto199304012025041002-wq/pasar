@@ -6,49 +6,77 @@ require_login();
 $page_title = 'Data ISR';
 
 // ── Input sanitize ────────────────────────────────────────────
-$q        = trim($_GET['q']        ?? '');
-$service  = trim($_GET['service']  ?? '');
-$city     = trim($_GET['city']     ?? '');
-$province = trim($_GET['province'] ?? '');
-$page_num = max(1, intval($_GET['page'] ?? 1));
-$per_page = PER_PAGE;
+$q          = trim($_GET['q']          ?? '');
+$service    = trim($_GET['service']    ?? '');
+$subservice = trim($_GET['subservice'] ?? '');
+$province   = trim($_GET['province']   ?? '');
+$city       = trim($_GET['city']       ?? '');
+$district   = trim($_GET['district']   ?? '');
+$page_num   = max(1, intval($_GET['page'] ?? 1));
+$per_page   = PER_PAGE;
 
 // ── Dropdown options ──────────────────────────────────────────
-$services  = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
-$cities    = $pdo->query("SELECT DISTINCT city    FROM isr WHERE city    IS NOT NULL ORDER BY city")->fetchAll(PDO::FETCH_COLUMN);
-$provinces = $pdo->query("SELECT DISTINCT province FROM isr WHERE province IS NOT NULL ORDER BY province")->fetchAll(PDO::FETCH_COLUMN);
+$services    = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
+$provinces   = $pdo->query("SELECT DISTINCT province FROM isr WHERE province IS NOT NULL ORDER BY province")->fetchAll(PDO::FETCH_COLUMN);
+
+// Sub-layanan: filter by service if selected
+if ($service !== '') {
+    $ss_stmt = $pdo->prepare("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL AND service = ? ORDER BY subservice");
+    $ss_stmt->execute([$service]);
+} else {
+    $ss_stmt = $pdo->query("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL ORDER BY subservice");
+}
+$subservices = $ss_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+// Kabupaten: filter by province if selected
+if ($province !== '') {
+    $city_stmt = $pdo->prepare("SELECT DISTINCT city FROM isr WHERE city IS NOT NULL AND province = ? ORDER BY city");
+    $city_stmt->execute([$province]);
+} else {
+    $city_stmt = $pdo->query("SELECT DISTINCT city FROM isr WHERE city IS NOT NULL ORDER BY city");
+}
+$cities = $city_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+// Kecamatan: filter by city if selected
+if ($city !== '') {
+    $dist_stmt = $pdo->prepare("SELECT DISTINCT district FROM isr WHERE district IS NOT NULL AND city = ? ORDER BY district");
+    $dist_stmt->execute([$city]);
+} else {
+    $dist_stmt = $pdo->query("SELECT DISTINCT district FROM isr WHERE district IS NOT NULL ORDER BY district");
+}
+$districts = $dist_stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // ── Build WHERE ───────────────────────────────────────────────
 $where  = [];
 $params = [];
 
 if ($q !== '') {
-    $where[]  = "(clnt_name LIKE ? OR curr_lic_num LIKE ? OR stn_name LIKE ? OR no_simf LIKE ?)";
+    $where[]  = "(clnt_name LIKE ? OR curr_lic_num LIKE ?)";
     $like     = '%' . $q . '%';
-    $params[] = $like; $params[] = $like; $params[] = $like; $params[] = $like;
+    $params[] = $like; $params[] = $like;
 }
-if ($service !== '')  { $where[] = "service = ?";  $params[] = $service;  }
-if ($city !== '')     { $where[] = "city = ?";     $params[] = $city;     }
-if ($province !== '') { $where[] = "province = ?"; $params[] = $province; }
+if ($service    !== '') { $where[] = "service = ?";    $params[] = $service;    }
+if ($subservice !== '') { $where[] = "subservice = ?"; $params[] = $subservice; }
+if ($province   !== '') { $where[] = "province = ?";   $params[] = $province;   }
+if ($city       !== '') { $where[] = "city = ?";       $params[] = $city;       }
+if ($district   !== '') { $where[] = "district = ?";   $params[] = $district;   }
 
 $clause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
 // ── Count ─────────────────────────────────────────────────────
 $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM isr $clause");
 $count_stmt->execute($params);
-$total_rows = $count_stmt->fetchColumn();
+$total_rows  = $count_stmt->fetchColumn();
 $total_pages = max(1, ceil($total_rows / $per_page));
 $page_num    = min($page_num, $total_pages);
 $offset      = ($page_num - 1) * $per_page;
 
 // ── Data ──────────────────────────────────────────────────────
 $data_stmt = $pdo->prepare(
-    "SELECT id, clnt_name, service, subservice, freq, freq_pair,
-            curr_lic_num, stn_name, district, city, province,
-            licence_date, validity_date, masa_laku, umur_isr,
-            no_simf, trans_type, erp_pwr_dbm, sid_lat, sid_long
+    "SELECT id, clnt_name, service, subservice,
+            curr_lic_num, stn_name, validity_date
      FROM isr $clause
-     ORDER BY clnt_name ASC, freq ASC
+     ORDER BY clnt_name ASC
      LIMIT $per_page OFFSET $offset"
 );
 $data_stmt->execute($params);
@@ -89,17 +117,17 @@ require_once __DIR__ . '/includes/header.php';
     <div style="padding:14px 18px;border-bottom:0.5px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
 
       <div class="form-group">
-        <label>Cari nama / No. ISR</label>
+        <label>Cari nama klien / No. ISR</label>
         <div class="search-wrap">
           <i class="ti ti-search"></i>
           <input type="search" name="q" id="q" value="<?= htmlspecialchars($q) ?>"
-                 placeholder="Ketik nama entitas atau nomor lisensi...">
+                 placeholder="Ketik nama klien atau nomor lisensi...">
         </div>
       </div>
 
       <div class="form-group">
         <label>Layanan</label>
-        <select name="service" class="auto-submit">
+        <select name="service" id="sel-service" class="auto-submit">
           <option value="">Semua layanan</option>
           <?php foreach ($services as $s): ?>
           <option value="<?= htmlspecialchars($s) ?>" <?= $service === $s ? 'selected' : '' ?>>
@@ -110,9 +138,33 @@ require_once __DIR__ . '/includes/header.php';
       </div>
 
       <div class="form-group">
-        <label>Kota/Kabupaten</label>
-        <select name="city" class="auto-submit">
-          <option value="">Semua kota</option>
+        <label>Sub-layanan</label>
+        <select name="subservice" class="auto-submit">
+          <option value="">Semua sub-layanan</option>
+          <?php foreach ($subservices as $ss): ?>
+          <option value="<?= htmlspecialchars($ss) ?>" <?= $subservice === $ss ? 'selected' : '' ?>>
+            <?= htmlspecialchars($ss) ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Provinsi</label>
+        <select name="province" id="sel-province" class="auto-submit">
+          <option value="">Semua provinsi</option>
+          <?php foreach ($provinces as $pv): ?>
+          <option value="<?= htmlspecialchars($pv) ?>" <?= $province === $pv ? 'selected' : '' ?>>
+            <?= htmlspecialchars($pv) ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Kabupaten/Kota</label>
+        <select name="city" id="sel-city" class="auto-submit">
+          <option value="">Semua kabupaten</option>
           <?php foreach ($cities as $c): ?>
           <option value="<?= htmlspecialchars($c) ?>" <?= $city === $c ? 'selected' : '' ?>>
             <?= htmlspecialchars($c) ?>
@@ -122,12 +174,12 @@ require_once __DIR__ . '/includes/header.php';
       </div>
 
       <div class="form-group">
-        <label>Provinsi</label>
-        <select name="province" class="auto-submit">
-          <option value="">Semua provinsi</option>
-          <?php foreach ($provinces as $pv): ?>
-          <option value="<?= htmlspecialchars($pv) ?>" <?= $province === $pv ? 'selected' : '' ?>>
-            <?= htmlspecialchars($pv) ?>
+        <label>Kecamatan</label>
+        <select name="district" class="auto-submit">
+          <option value="">Semua kecamatan</option>
+          <?php foreach ($districts as $dt): ?>
+          <option value="<?= htmlspecialchars($dt) ?>" <?= $district === $dt ? 'selected' : '' ?>>
+            <?= htmlspecialchars($dt) ?>
           </option>
           <?php endforeach; ?>
         </select>
@@ -139,21 +191,6 @@ require_once __DIR__ . '/includes/header.php';
       </div>
 
     </div>
-
-    <!-- Filter pills (service shortcut) -->
-    <div class="filter-bar">
-      <label>Filter cepat:</label>
-      <button type="button" class="filter-btn <?= $service === '' ? 'active' : '' ?>"
-              data-filter="" data-group="svc" data-target="svc-hidden">Semua</button>
-      <?php foreach ($services as $s): ?>
-      <button type="button" class="filter-btn <?= $service === $s ? 'active' : '' ?>"
-              data-filter="<?= htmlspecialchars($s) ?>" data-group="svc" data-target="svc-hidden">
-        <?= htmlspecialchars($s) ?>
-      </button>
-      <?php endforeach; ?>
-      <input type="hidden" id="svc-hidden" name="service_pill" value="">
-    </div>
-
   </form>
 
   <!-- Table -->
@@ -168,16 +205,12 @@ require_once __DIR__ . '/includes/header.php';
       <thead>
         <tr>
           <th style="width:36px">#</th>
-          <th>Nama Entitas</th>
+          <th>Nama Klien</th>
           <th>Layanan</th>
           <th>Sub-layanan</th>
-          <th>Frekuensi (MHz)</th>
           <th>Nama Stasiun</th>
-          <th>Kecamatan</th>
-          <th>Kota/Kab</th>
           <th>No. Lisensi</th>
           <th>Berlaku s/d</th>
-          <th>Masa Laku</th>
           <th>Aksi</th>
         </tr>
       </thead>
@@ -193,18 +226,14 @@ require_once __DIR__ . '/includes/header.php';
           </td>
           <td><?= svc_badge($row['service'] ?? '') ?></td>
           <td class="td-muted"><?= htmlspecialchars($row['subservice'] ?? '-') ?></td>
-          <td class="td-freq"><?= $row['freq'] !== null ? number_format($row['freq'], 3, ',', '.') : '-' ?></td>
           <td style="max-width:160px">
             <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                  title="<?= htmlspecialchars($row['stn_name'] ?? '') ?>">
               <?= htmlspecialchars($row['stn_name'] ?? '-') ?>
             </div>
           </td>
-          <td><?= htmlspecialchars($row['district'] ?? '-') ?></td>
-          <td><?= htmlspecialchars($row['city'] ?? '-') ?></td>
           <td class="td-mono"><?= htmlspecialchars($row['curr_lic_num'] ?? '-') ?></td>
           <td class="td-muted"><?= htmlspecialchars($row['validity_date'] ?? '-') ?></td>
-          <td class="td-muted"><?= htmlspecialchars($row['masa_laku'] ?? '-') ?></td>
           <td>
             <a href="detail.php?id=<?= $row['id'] ?>" class="btn" style="padding:4px 8px;font-size:11px">
               <i class="ti ti-eye"></i>
