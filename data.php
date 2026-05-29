@@ -114,9 +114,9 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Filter + Search Bar -->
   <form method="get" action="">
-    <div style="padding:14px 18px;border-bottom:0.5px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+    <div class="filter-grid">
 
-      <div class="form-group">
+      <div class="form-group filter-full">
         <label>Cari nama klien / No. ISR</label>
         <div class="search-wrap">
           <i class="ti ti-search"></i>
@@ -149,7 +149,7 @@ require_once __DIR__ . '/includes/header.php';
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group filter-full">
         <label>Provinsi</label>
         <select name="province" id="sel-province" class="auto-submit">
           <option value="">Semua provinsi</option>
@@ -185,7 +185,7 @@ require_once __DIR__ . '/includes/header.php';
         </select>
       </div>
 
-      <div style="display:flex;gap:6px;align-items:flex-end">
+      <div class="filter-actions filter-full">
         <button type="submit" class="btn btn-primary"><i class="ti ti-search"></i>Cari</button>
         <a href="data.php" class="btn"><i class="ti ti-x"></i>Reset</a>
       </div>

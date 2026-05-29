@@ -342,7 +342,7 @@ body {
 /* ── MAIN CONTENT ────────────────────────────────────────────── */
 .app-main {
     flex: 1;
-    padding: 16px var(--px);
+    padding: 10px var(--px) 16px;
     width: 100%;
     max-width: 100%;
 }
@@ -360,10 +360,16 @@ body {
 }
 
 .page-title {
-    font-size: 19px;
+    font-size: 16px;
     font-weight: 700;
     margin-bottom: 1px;
     letter-spacing: -0.3px;
+}
+
+@media (min-width: 768px) {
+    .page-title {
+        font-size: 19px;
+    }
 }
 
 .page-sub {
@@ -705,6 +711,62 @@ body {
         color: var(--muted);
     }
 
+/* ── FILTER GRID ─────────────────────────────────────────────── */
+.filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 0.5px solid var(--border);
+}
+
+    .filter-grid .filter-full {
+        grid-column: 1 / -1;
+    }
+
+    .filter-grid .form-group {
+        min-width: 0;
+    }
+
+    .filter-grid input[type=search],
+    .filter-grid select {
+        width: 100%;
+        font-size: 12px;
+        padding: 6px 8px;
+        min-height: 36px;
+    }
+
+    .filter-grid .search-wrap input {
+        padding-left: 26px;
+    }
+
+.filter-actions {
+    display: flex;
+    gap: 6px;
+}
+
+    .filter-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+@media (min-width: 768px) {
+    .filter-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        padding: 12px 16px;
+        gap: 10px;
+    }
+
+    .filter-actions {
+        grid-column: unset;
+        align-items: flex-end;
+    }
+
+        .filter-actions .btn {
+            flex: unset;
+        }
+}
+
 @media (min-width: 540px) {
     .form-row {
         flex-direction: row;
@@ -713,11 +775,11 @@ body {
 }
 
 input[type=text], input[type=search], select {
-    padding: 10px 12px;
-    min-height: var(--touch);
+    padding: 7px 10px;
+    min-height: 38px;
     border: 0.5px solid var(--border-md);
     border-radius: var(--radius);
-    font-size: 15px;
+    font-size: 13px;
     font-family: inherit;
     background: var(--surface);
     color: var(--text);
@@ -748,16 +810,16 @@ input[type=text], input[type=search], select {
 
     .search-wrap i {
         position: absolute;
-        left: 11px;
+        left: 9px;
         top: 50%;
         transform: translateY(-50%);
         color: var(--muted);
-        font-size: 17px;
+        font-size: 14px;
         pointer-events: none;
     }
 
     .search-wrap input {
-        padding-left: 34px;
+        padding-left: 28px;
     }
 
 @media (min-width: 768px) {

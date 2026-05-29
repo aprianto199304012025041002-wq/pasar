@@ -17,8 +17,8 @@ function row_detail(string $label, $val): void {
     if ($val === null || $val === '') $val = '<span style="color:var(--muted)">—</span>';
     else $val = htmlspecialchars($val);
     echo "<tr>
-        <td style='color:#6b7280;width:180px;padding:7px 12px;vertical-align:top;font-size:11px'>$label</td>
-        <td style='padding:7px 12px;font-size:12px;color:#1e1b4b'>$val</td>
+        <td style='color:#6b7280;width:110px;max-width:110px;padding:5px 10px;vertical-align:top;font-size:11px;line-height:1.3'>$label</td>
+        <td style='padding:5px 10px;font-size:11px;color:#1e1b4b;word-break:break-word'>$val</td>
     </tr>";
 }
 
@@ -36,7 +36,7 @@ require_once __DIR__ . '/includes/header.php';
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px;
+    padding: 7px 12px;
     border-bottom: 0.5px solid #c7d2fe;
     font-size: 13px;
     font-weight: 600;
@@ -54,7 +54,7 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 
   <!-- Info Klien -->
   <div class="detail-card">
