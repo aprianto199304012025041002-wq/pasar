@@ -155,8 +155,7 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Map toolbar + Legend (1 row) -->
   <div class="map-controls">
-    <span id="map-count" style="font-size:12px;color:var(--muted);flex-shrink:0">Memuat...</span>
-    <div class="map-legend" style="flex:1">
+    <div class="map-legend">
       <?php foreach ($service_colors as $svc => $color): ?>
       <div class="legend-item">
         <div class="legend-dot" style="background:<?= $color ?>"></div>
@@ -164,6 +163,7 @@ require_once __DIR__ . '/includes/header.php';
       </div>
       <?php endforeach; ?>
     </div>
+    <span id="map-count" style="font-size:12px;color:var(--muted);flex-shrink:0">Memuat...</span>
     <button id="btn-cluster" class="btn" style="font-size:12px;padding:5px 10px;flex-shrink:0">
       <i class="ti ti-layout-grid"></i> Cluster: ON
     </button>

@@ -1225,6 +1225,13 @@ tbody tr:hover {
     gap: 10px;
     flex-wrap: wrap;
     font-size: 12px;
+    flex: 1;
+}
+
+@media (max-width: 539px) {
+    .map-legend {
+        display: none;
+    }
 }
 
 .legend-item {
