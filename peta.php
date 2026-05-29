@@ -66,7 +66,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="page-title">
   Peta Stasiun
-  <div class="page-sub">Sebaran lokasi stasiun radio berdasarkan koordinat data SIMF</div>
+  <div class="page-sub">Sebaran lokasi stasiun radio berdasarkan koordinat data SIMS</div>
 </div>
 
 <div class="card" id="peta-card">

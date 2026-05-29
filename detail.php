@@ -56,7 +56,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
 
-  <!-- Info Entitas -->
+  <!-- Info Klien -->
   <div class="detail-card">
     <div class="detail-card-header" style="background:#EEF2FF;color:#3730a3">
       <i class="ti ti-building" style="font-size:15px;color:#4F46E5"></i>Informasi Klien
@@ -65,7 +65,7 @@ require_once __DIR__ . '/includes/header.php';
       <?php
       row_detail('Nama Klien',     $d['clnt_name']);
       row_detail('Client ID',      $d['clnt_id']);
-      row_detail('No. SIMF',       $d['no_simf']);
+      row_detail('No. SIMS',       $d['no_simf']);
       row_detail('Application ID', $d['appl_id']);
       row_detail('Status',         $d['status_simf']);
       row_detail('UPT',            $d['upt']);

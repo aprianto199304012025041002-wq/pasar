@@ -1,6 +1,6 @@
 <?php
 /**
- * SIMF Monitor — Konfigurasi
+ * SIMS Monitor — Konfigurasi
  * File ini hanya loader. Credential sebenarnya ada di config.local.php
  * config.local.php TIDAK masuk repo — set manual di server hosting.
  */

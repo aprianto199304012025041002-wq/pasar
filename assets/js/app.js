@@ -1,4 +1,4 @@
-/* SIMF Monitor — app.js */
+/* SIMS Monitor — app.js */
 document.addEventListener('DOMContentLoaded', function () {
 
     var btnMenu = document.getElementById('btn-menu');
