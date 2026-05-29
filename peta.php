@@ -153,19 +153,10 @@ require_once __DIR__ . '/includes/header.php';
     </div>
   </form>
 
-  <!-- Map toolbar -->
+  <!-- Map toolbar + Legend (1 row) -->
   <div class="map-controls">
-    <span id="map-count" style="font-size:12px;color:var(--muted)">Memuat...</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <button id="btn-cluster" class="btn" style="font-size:12px;padding:5px 10px">
-        <i class="ti ti-layout-grid"></i> Cluster: ON
-      </button>
-    </div>
-  </div>
-
-  <!-- Legend -->
-  <div style="padding:8px 14px;border-bottom:0.5px solid var(--border)">
-    <div class="map-legend">
+    <span id="map-count" style="font-size:12px;color:var(--muted);flex-shrink:0">Memuat...</span>
+    <div class="map-legend" style="flex:1">
       <?php foreach ($service_colors as $svc => $color): ?>
       <div class="legend-item">
         <div class="legend-dot" style="background:<?= $color ?>"></div>
@@ -173,6 +164,9 @@ require_once __DIR__ . '/includes/header.php';
       </div>
       <?php endforeach; ?>
     </div>
+    <button id="btn-cluster" class="btn" style="font-size:12px;padding:5px 10px;flex-shrink:0">
+      <i class="ti ti-layout-grid"></i> Cluster: ON
+    </button>
   </div>
 
   <!-- Map -->
@@ -205,10 +199,9 @@ function setMapHeight() {
   var card    = document.getElementById('peta-card');
   var mapEl   = document.getElementById('map');
   var toolbar = card.querySelector('.map-controls');
-  var legend  = toolbar.nextElementSibling;
   var form    = card.querySelector('form');
   var cardTop = card.getBoundingClientRect().top + window.scrollY;
-  var used    = form.offsetHeight + toolbar.offsetHeight + legend.offsetHeight;
+  var used    = form.offsetHeight + toolbar.offsetHeight;
   var available = window.innerHeight - cardTop - used - 2;
   mapEl.style.height = Math.max(280, available) + 'px';
 }
