@@ -71,82 +71,83 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="card" id="peta-card">
 
-  <!-- Filter (sama dengan Data ISR) -->
+  <!-- Filter -->
   <form method="get" action="" id="peta-form">
-    <div class="filter-grid">
+    <div class="filter-compact">
 
-      <div class="form-group filter-full">
-        <label>Cari nama klien / No. ISR</label>
+      <div class="filter-search-row">
         <div class="search-wrap">
           <i class="ti ti-search"></i>
           <input type="search" name="q" value="<?= htmlspecialchars($q) ?>"
-                 placeholder="Ketik nama klien atau nomor lisensi...">
+                 placeholder="Cari nama klien, stasiun, atau No. ISR...">
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Layanan</label>
-        <select name="service" class="auto-submit">
-          <option value="">Semua layanan</option>
-          <?php foreach ($services as $s): ?>
-          <option value="<?= htmlspecialchars($s) ?>" <?= $service === $s ? 'selected' : '' ?>>
-            <?= htmlspecialchars($s) ?>
-          </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <div class="filter-dropdowns-row">
+        <div class="form-group">
+          <label>Layanan</label>
+          <select name="service" class="auto-submit">
+            <option value="">Semua layanan</option>
+            <?php foreach ($services as $s): ?>
+            <option value="<?= htmlspecialchars($s) ?>" <?= $service === $s ? 'selected' : '' ?>>
+              <?= htmlspecialchars($s) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label>Sub-layanan</label>
-        <select name="subservice" class="auto-submit">
-          <option value="">Semua sub-layanan</option>
-          <?php foreach ($subservices as $ss): ?>
-          <option value="<?= htmlspecialchars($ss) ?>" <?= $subservice === $ss ? 'selected' : '' ?>>
-            <?= htmlspecialchars($ss) ?>
-          </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+        <div class="form-group">
+          <label>Sub-layanan</label>
+          <select name="subservice" class="auto-submit">
+            <option value="">Semua sub-layanan</option>
+            <?php foreach ($subservices as $ss): ?>
+            <option value="<?= htmlspecialchars($ss) ?>" <?= $subservice === $ss ? 'selected' : '' ?>>
+              <?= htmlspecialchars($ss) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-      <div class="form-group filter-full">
-        <label>Provinsi</label>
-        <select name="province" class="auto-submit">
-          <option value="">Semua provinsi</option>
-          <?php foreach ($provinces as $pv): ?>
-          <option value="<?= htmlspecialchars($pv) ?>" <?= $province === $pv ? 'selected' : '' ?>>
-            <?= htmlspecialchars($pv) ?>
-          </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+        <div class="form-group">
+          <label>Provinsi</label>
+          <select name="province" class="auto-submit">
+            <option value="">Semua provinsi</option>
+            <?php foreach ($provinces as $pv): ?>
+            <option value="<?= htmlspecialchars($pv) ?>" <?= $province === $pv ? 'selected' : '' ?>>
+              <?= htmlspecialchars($pv) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label>Kabupaten/Kota</label>
-        <select name="city" class="auto-submit">
-          <option value="">Semua kabupaten</option>
-          <?php foreach ($cities as $c): ?>
-          <option value="<?= htmlspecialchars($c) ?>" <?= $city === $c ? 'selected' : '' ?>>
-            <?= htmlspecialchars($c) ?>
-          </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+        <div class="form-group">
+          <label>Kab/Kota</label>
+          <select name="city" class="auto-submit">
+            <option value="">Semua kab/kota</option>
+            <?php foreach ($cities as $c): ?>
+            <option value="<?= htmlspecialchars($c) ?>" <?= $city === $c ? 'selected' : '' ?>>
+              <?= htmlspecialchars($c) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label>Kecamatan</label>
-        <select name="district" class="auto-submit">
-          <option value="">Semua kecamatan</option>
-          <?php foreach ($districts as $dt): ?>
-          <option value="<?= htmlspecialchars($dt) ?>" <?= $district === $dt ? 'selected' : '' ?>>
-            <?= htmlspecialchars($dt) ?>
-          </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+        <div class="form-group">
+          <label>Kecamatan</label>
+          <select name="district" class="auto-submit">
+            <option value="">Semua kecamatan</option>
+            <?php foreach ($districts as $dt): ?>
+            <option value="<?= htmlspecialchars($dt) ?>" <?= $district === $dt ? 'selected' : '' ?>>
+              <?= htmlspecialchars($dt) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-      <div class="filter-actions filter-full">
-        <button type="submit" class="btn btn-primary"><i class="ti ti-search"></i>Cari</button>
-        <a href="peta.php" class="btn"><i class="ti ti-x"></i>Reset</a>
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary"><i class="ti ti-search"></i>Cari</button>
+          <a href="peta.php" class="btn"><i class="ti ti-x"></i>Reset</a>
+        </div>
       </div>
 
     </div>

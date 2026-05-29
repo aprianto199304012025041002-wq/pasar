@@ -23,8 +23,8 @@ $params = [];
 
 if ($q !== '') {
     $like     = '%' . $q . '%';
-    $where[]  = "(clnt_name LIKE ? OR curr_lic_num LIKE ?)";
-    $params[] = $like; $params[] = $like;
+    $where[]  = "(clnt_name LIKE ? OR curr_lic_num LIKE ? OR stn_name LIKE ?)";
+    $params[] = $like; $params[] = $like; $params[] = $like;
 }
 if ($service    !== '') { $where[] = "service = ?";    $params[] = $service;    }
 if ($subservice !== '') { $where[] = "subservice = ?"; $params[] = $subservice; }
