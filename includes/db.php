@@ -9,6 +9,7 @@ try {
         PDO::ATTR_EMULATE_PREPARES   => false,
     ]);
 } catch (PDOException $e) {
+    error_log('[PASAR] DB connection failed: ' . $e->getMessage());
     http_response_code(500);
-    die(json_encode(['error' => 'Koneksi database gagal: ' . $e->getMessage()]));
+    die(json_encode(['error' => 'Koneksi database gagal. Silakan coba beberapa saat lagi.']));
 }
