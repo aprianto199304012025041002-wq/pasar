@@ -24,10 +24,10 @@ $nav_items = [
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon"><i class="ti ti-antenna"></i></div>
+    <div class="logo-icon"><i class="ti ti-satellite"></i></div>
     <div class="logo-text">
       <div class="logo-name"><?= strtoupper(APP_NAME) ?></div>
-      <div class="logo-sub">Balmon Jogja</div>
+      <div class="logo-sub">BALMON JOGJA</div>
     </div>
   </div>
   <nav class="sidebar-nav">
@@ -44,7 +44,7 @@ $nav_items = [
     <div class="avatar" style="flex-shrink:0"><?= strtoupper(substr($user['name'], 0, 2)) ?></div>
     <div class="sidebar-user-info">
       <div class="user-name"><?= htmlspecialchars($user['name']) ?></div>
-      <div class="user-role"><?= htmlspecialchars($user['role']) ?></div>
+      <div class="user-role"><?= strtoupper(htmlspecialchars($user['role'])) ?></div>
     </div>
     <a href="<?= APP_BASE_URL ?>/logout.php" class="btn-logout" title="Logout" style="flex-shrink:0">
       <i class="ti ti-logout"></i>
