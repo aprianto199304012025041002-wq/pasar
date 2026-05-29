@@ -229,7 +229,7 @@ require_once __DIR__ . '/includes/header.php';
 <div class="card dash-section">
   <div class="card-header">
     <span class="card-title">Sebaran ISR per klien</span>
-    <span class="card-hint"><?= number_format($n_klien,0,',','.') ?> entitas · klik untuk expand</span>
+    <span class="card-hint"><?= number_format($n_klien,0,',','.') ?> klien · klik untuk expand</span>
   </div>
   <div style="padding:8px 14px 4px">
     <input type="search" id="clientSearch" placeholder="Cari nama klien..."
