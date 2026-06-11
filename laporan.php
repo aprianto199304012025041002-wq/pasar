@@ -187,10 +187,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
                 $log['file_name'], $log['file_type'],  $log['file_size'],
                 $log['row_count'], $log['status'],     $log['note'],
             ]);
-        $result['_log_id'] = $pdo->lastInsertId();
+
     } catch (Throwable $e) {
         error_log('[laporan] Gagal simpan log: ' . $e->getMessage());
-        $result['_log_err'] = $e->getMessage();
+
     }
 }
 
@@ -223,10 +223,10 @@ try {
     } else {
         $logs = [];
     }
-    $log_query_err = null;
+
 } catch (Throwable $e) {
     $logs = []; $total_logs = 0; $total_pages = 1;
-    $log_query_err = $e->getMessage();
+
 }
 
 function _page_url(int $p, int $per): string {
