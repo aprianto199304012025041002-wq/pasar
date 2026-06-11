@@ -5,7 +5,7 @@ require_login();
 
 $page_title = 'Laporan';
 
-define('TARGET_TABLE', 'isr_data');
+define('TARGET_TABLE', 'isr');
 define('LOG_TABLE',    'upload_log');
 
 $KNOWN_COLUMNS = [
