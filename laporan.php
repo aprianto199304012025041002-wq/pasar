@@ -5,16 +5,355 @@ require_login();
 
 $page_title = 'Laporan';
 
+define('TARGET_TABLE', 'isr_data');
+define('LOG_TABLE',    'upload_log');
+
+$KNOWN_COLUMNS = [
+    'CLNT_ID','NO_SIMF','APPL_ID','SITE_ID','CLNT_NAME','STATUS_SIMF','CORR_ADDR',
+    'AP_REQUEST_TYPE','SERVICE','SUBSERVICE','TRANS_TYPE','FREQ','FREQ_PAIR',
+    'ERP_PWR_DBM','EQ_PWR','GAIN','LOSS','BWIDTH','IB','IP','HDDP','HDLP','ZONA',
+    'STN_TYPE','EQUIP_TYPE','BHP','EQ_MFR','EQ_MDL','ANT_MFR','ANT_MDL','HGT_ANT',
+    'AZIM','ELEV_ANGLE','MASTER_PLZN_CODE','EMIS_CLASS_1','STN_NAME','STN_ADDR',
+    'SID_LONG','SID_LAT','LINK_ID','CIRCUIT_LEN','LAT_DEG','LAT_MIN','LAT_SEC',
+    'LAT_DIR_IND','LONG_DEG','LONG_MIN','LONG_SEC','LONG_DIR_IND','AREA_OF_SERVICE',
+];
+
+// ── Helpers dideklarasikan dulu sebelum dipanggil ──────────────────────────────
+function _read_xlsx(string $path): array {
+    $zip = new ZipArchive();
+    if ($zip->open($path) !== true) throw new Exception('Tidak bisa membuka file XLSX.');
+    $sharedStrings = [];
+    $ssXml = $zip->getFromName('xl/sharedStrings.xml');
+    if ($ssXml !== false) {
+        $ss = simplexml_load_string($ssXml);
+        foreach ($ss->si as $si) {
+            $text = '';
+            foreach ($si->r as $r) $text .= (string)$r->t;
+            if ($text === '') $text = (string)$si->t;
+            $sharedStrings[] = $text;
+        }
+    }
+    $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+    $zip->close();
+    if ($sheetXml === false) throw new Exception('sheet1 tidak ditemukan di XLSX.');
+    $sheet = simplexml_load_string($sheetXml);
+    $rows  = [];
+    foreach ($sheet->sheetData->row as $row) {
+        $rowData = []; $prevCol = -1;
+        foreach ($row->c as $cell) {
+            $colIdx = _col_to_index(preg_replace('/[0-9]/', '', (string)$cell['r']));
+            while (++$prevCol < $colIdx) $rowData[] = '';
+            $type  = (string)$cell['t'];
+            $value = (string)$cell->v;
+            if ($type === 's')             $value = $sharedStrings[(int)$value] ?? '';
+            elseif ($type === 'inlineStr') $value = (string)$cell->is->t;
+            $rowData[] = $value; $prevCol = $colIdx;
+        }
+        $rows[] = $rowData;
+    }
+    return $rows;
+}
+
+function _col_to_index(string $col): int {
+    $col = strtoupper($col); $idx = 0;
+    for ($i = 0; $i < strlen($col); $i++)
+        $idx = $idx * 26 + (ord($col[$i]) - ord('A') + 1);
+    return $idx - 1;
+}
+
+function _read_csv(string $path): array {
+    $rows = [];
+    if (($fh = fopen($path, 'r')) === false) throw new Exception('Tidak bisa membuka file CSV.');
+    while (($line = fgetcsv($fh, 0, ',')) !== false) $rows[] = $line;
+    fclose($fh);
+    if (!empty($rows) && count($rows[0]) === 1) {
+        $rows = [];
+        if (($fh = fopen($path, 'r')) === false) throw new Exception('Tidak bisa membuka file CSV.');
+        while (($line = fgetcsv($fh, 0, ';')) !== false) $rows[] = $line;
+        fclose($fh);
+    }
+    return $rows;
+}
+
+function _ensure_table(PDO $pdo, string $table, array $columns): void {
+    $stmt = $pdo->query("SHOW TABLES LIKE '" . $table . "'");
+    if ($stmt->rowCount() > 0) return;
+    $colDefs = ['`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'];
+    foreach ($columns as $col) $colDefs[] = '`' . $col . '` TEXT';
+    $pdo->exec('CREATE TABLE IF NOT EXISTS `' . $table . '` (' . implode(', ', $colDefs) . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+}
+
+function _fmt_bytes(int $bytes): string {
+    if ($bytes >= 1048576) return round($bytes / 1048576, 1) . ' MB';
+    if ($bytes >= 1024)    return round($bytes / 1024, 1) . ' KB';
+    return $bytes . ' B';
+}
+
+// ── Pastikan tabel log ada ─────────────────────────────────────────────────────
+try {
+    $pdo->exec('CREATE TABLE IF NOT EXISTS `' . LOG_TABLE . '` (
+        `id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        `uploaded_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `user_id`     VARCHAR(64)  NOT NULL DEFAULT \'\',
+        `user_name`   VARCHAR(128) NOT NULL DEFAULT \'\',
+        `user_email`  VARCHAR(128) NOT NULL DEFAULT \'\',
+        `user_role`   VARCHAR(32)  NOT NULL DEFAULT \'\',
+        `file_name`   VARCHAR(255) NOT NULL DEFAULT \'\',
+        `file_type`   VARCHAR(10)  NOT NULL DEFAULT \'\',
+        `file_size`   INT UNSIGNED NOT NULL DEFAULT 0,
+        `row_count`   INT UNSIGNED NULL,
+        `status`      ENUM(\'success\',\'failed\') NOT NULL DEFAULT \'success\',
+        `note`        TEXT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+} catch (Throwable $e) {
+    error_log('[laporan] Gagal buat tabel log: ' . $e->getMessage());
+}
+
+// ── Proses upload ─────────────────────────────────────────────────────────────
+$result = null;
+$me     = get_user();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
+    $file    = $_FILES['datafile'];
+    $ext     = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $tmpPath = $file['tmp_name'];
+
+    $log = [
+        'user_id'    => $me['id'],
+        'user_name'  => $me['name'],
+        'user_email' => $me['email'],
+        'user_role'  => $me['role'],
+        'file_name'  => $file['name'],
+        'file_type'  => $ext,
+        'file_size'  => (int)($file['size'] ?? 0),
+        'row_count'  => null,
+        'status'     => 'failed',
+        'note'       => '',
+    ];
+
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $log['note'] = 'Upload error code: ' . $file['error'];
+        $result = ['success' => false, 'message' => 'Upload gagal (kode error: ' . $file['error'] . ')'];
+    } elseif (!in_array($ext, ['xlsx', 'csv', 'sql'])) {
+        $log['note'] = 'Format tidak didukung: ' . $ext;
+        $result = ['success' => false, 'message' => 'Format file tidak didukung. Gunakan .xlsx, .csv, atau .sql'];
+    } else {
+        try {
+            if ($ext === 'sql') {
+                $sql_content = file_get_contents($tmpPath);
+                if ($sql_content === false) throw new Exception('Tidak bisa membaca file SQL.');
+                $pdo->exec($sql_content);
+                $log['status'] = 'success';
+                $log['note']   = 'Eksekusi SQL langsung';
+                $result = ['success' => true, 'message' => 'File SQL berhasil dieksekusi.', 'rows' => null];
+            } else {
+                $rows = $ext === 'xlsx' ? _read_xlsx($tmpPath) : _read_csv($tmpPath);
+
+                if (empty($rows)) throw new Exception('File kosong atau tidak ada data yang terbaca.');
+
+                $headers = array_map('trim', array_shift($rows));
+                if (empty($headers)) throw new Exception('Header kolom tidak ditemukan.');
+
+                $matched = array_intersect($headers, $KNOWN_COLUMNS);
+                if (count($matched) < 3) {
+                    throw new Exception('Kolom tidak cocok dengan format yang dikenal.');
+                }
+
+                // TRUNCATE implicitly commits, so do it BEFORE opening transaction
+                _ensure_table($pdo, TARGET_TABLE, $headers);
+                $pdo->exec('TRUNCATE TABLE `' . TARGET_TABLE . '`');
+
+                $cols_escaped = array_map(fn($c) => '`' . $c . '`', $headers);
+                $placeholders = implode(', ', array_fill(0, count($headers), '?'));
+                $stmt = $pdo->prepare(
+                    'INSERT INTO `' . TARGET_TABLE . '` (' . implode(', ', $cols_escaped) . ') VALUES (' . $placeholders . ')'
+                );
+
+                $pdo->beginTransaction();
+                foreach ($rows as $row) {
+                    $row = array_slice(array_pad($row, count($headers), null), 0, count($headers));
+                    $row = array_map(fn($v) => ($v === '' ? null : $v), $row);
+                    $stmt->execute($row);
+                }
+                $pdo->commit();
+
+                $log['status']    = 'success';
+                $log['row_count'] = count($rows);
+                $log['note']      = 'TRUNCATE + INSERT ' . count($rows) . ' baris';
+                $result = ['success' => true, 'message' => 'Tabel berhasil diperbarui.', 'rows' => count($rows)];
+            }
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $log['note'] = $e->getMessage();
+            $result = ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
+
+    // Simpan log — dibungkus try-catch agar error log tidak crash halaman
+    try {
+        $pdo->prepare('INSERT INTO `' . LOG_TABLE . '`
+            (user_id, user_name, user_email, user_role, file_name, file_type, file_size, row_count, status, note)
+            VALUES (?,?,?,?,?,?,?,?,?,?)')
+            ->execute([
+                $log['user_id'],   $log['user_name'],  $log['user_email'], $log['user_role'],
+                $log['file_name'], $log['file_type'],  $log['file_size'],
+                $log['row_count'], $log['status'],     $log['note'],
+            ]);
+    } catch (Throwable $e) {
+        error_log('[laporan] Gagal simpan log: ' . $e->getMessage());
+    }
+}
+
+// ── Ambil riwayat log (20 terbaru) ────────────────────────────────────────────
+try {
+    $logs = $pdo->query(
+        'SELECT * FROM `' . LOG_TABLE . '` ORDER BY uploaded_at DESC LIMIT 20'
+    )->fetchAll();
+} catch (Throwable $e) {
+    $logs = [];
+}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="page-title">Laporan
-  <div class="page-sub">Halaman ini sedang dalam pengembangan</div>
+<div class="page-title">Upload Data
+  <div class="page-sub">Impor data ISR ke database — Excel, CSV, atau SQL</div>
 </div>
 
-<div class="empty-state">
-  <i class="ti ti-file-analytics" aria-hidden="true"></i>
-  <div>Belum ada laporan yang tersedia.</div>
+<?php if ($result): ?>
+<div class="alert <?= $result['success'] ? 'alert-success' : 'alert-danger' ?>" role="alert" style="margin-bottom:1.25rem;">
+  <i class="ti <?= $result['success'] ? 'ti-circle-check' : 'ti-alert-circle' ?>"></i>
+  <?= htmlspecialchars($result['message']) ?>
+  <?php if ($result['success'] && isset($result['rows'])): ?>
+    &mdash; <strong><?= number_format($result['rows']) ?></strong> baris berhasil dimasukkan.
+  <?php endif; ?>
 </div>
+<?php endif; ?>
+
+<div class="card" style="max-width:640px;">
+  <div class="card-header">
+    <i class="ti ti-file-upload" style="margin-right:.4rem;"></i>
+    Upload File Data
+  </div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label for="datafile" style="display:block;margin-bottom:.4rem;font-weight:500;">File</label>
+        <input type="file" id="datafile" name="datafile" accept=".xlsx,.csv,.sql" required
+               style="display:block;width:100%;padding:.5rem .75rem;border:.5px solid var(--border-md);border-radius:var(--radius);background:var(--surface);color:inherit;font-size:.9rem;">
+        <small style="color:var(--muted);">Format: .xlsx, .csv, .sql &mdash; maks. 32 MB</small>
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.25rem;">
+        <label style="display:block;margin-bottom:.4rem;font-weight:500;">Target tabel</label>
+        <input type="text" value="<?= htmlspecialchars(TARGET_TABLE) ?>" disabled
+               style="display:block;width:100%;padding:.5rem .75rem;border:.5px solid var(--border-md);border-radius:var(--radius);background:var(--bg);color:inherit;font-size:.9rem;">
+      </div>
+
+      <div id="upload-progress" style="display:none;margin-bottom:1rem;">
+        <div style="height:5px;background:var(--bg);border-radius:99px;overflow:hidden;">
+          <div id="progress-bar" style="height:100%;width:0;background:var(--blue);transition:width .3s;border-radius:99px;"></div>
+        </div>
+        <small id="progress-label" style="color:var(--muted);">Mengupload…</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="upload-btn">
+        <i class="ti ti-upload"></i>
+        Upload &amp; Proses
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Riwayat Upload -->
+<div class="card" style="max-width:900px;margin-top:1.25rem;">
+  <div class="card-header">
+    <i class="ti ti-history" style="margin-right:.4rem;"></i>
+    Riwayat Upload
+    <span style="margin-left:auto;font-size:.78rem;color:var(--muted);font-weight:400;">20 terakhir</span>
+  </div>
+  <?php if (empty($logs)): ?>
+  <div class="empty-state" style="padding:2rem;">
+    <i class="ti ti-inbox" aria-hidden="true"></i>
+    <div>Belum ada riwayat upload.</div>
+  </div>
+  <?php else: ?>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>User</th>
+          <th>File</th>
+          <th>Ukuran</th>
+          <th>Baris</th>
+          <th>Status</th>
+          <th>Keterangan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($logs as $l): ?>
+        <tr>
+          <td class="td-mono" style="white-space:nowrap;">
+            <?= date('d/m/Y H:i', strtotime($l['uploaded_at'])) ?>
+          </td>
+          <td>
+            <div style="font-weight:500;font-size:.85rem;"><?= htmlspecialchars($l['user_name']) ?></div>
+            <div style="font-size:.78rem;color:var(--muted);"><?= htmlspecialchars($l['user_email']) ?></div>
+          </td>
+          <td style="max-width:200px;">
+            <div style="font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<?= htmlspecialchars($l['file_name']) ?>">
+              <?= htmlspecialchars($l['file_name']) ?>
+            </div>
+            <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;"><?= htmlspecialchars($l['file_type']) ?></div>
+          </td>
+          <td class="td-muted" style="white-space:nowrap;"><?= _fmt_bytes((int)$l['file_size']) ?></td>
+          <td style="text-align:right;font-weight:500;">
+            <?= $l['row_count'] !== null ? number_format((int)$l['row_count']) : '—' ?>
+          </td>
+          <td>
+            <?php if ($l['status'] === 'success'): ?>
+              <span class="badge badge-granted"><i class="ti ti-check"></i> Berhasil</span>
+            <?php else: ?>
+              <span class="badge badge-broadcast"><i class="ti ti-x"></i> Gagal</span>
+            <?php endif; ?>
+          </td>
+          <td style="font-size:.8rem;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+              title="<?= htmlspecialchars($l['note']) ?>">
+            <?= htmlspecialchars($l['note']) ?>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php endif; ?>
+</div>
+
+<style>
+.alert{display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1rem;border-radius:var(--radius-lg);font-size:.9rem;border:.5px solid transparent;}
+.alert-success{background:var(--green-lt);border-color:#6ee7b7;color:var(--green);}
+.alert-danger{background:var(--red-lt);border-color:#fca5a5;color:var(--red);}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<script>
+document.getElementById('upload-form').addEventListener('submit', function () {
+  const btn = document.getElementById('upload-btn');
+  const prog = document.getElementById('upload-progress');
+  const bar  = document.getElementById('progress-bar');
+  const lbl  = document.getElementById('progress-label');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Memproses\u2026';
+  prog.style.display = 'block';
+  let pct = 0;
+  const iv = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 15, 90);
+    bar.style.width = pct + '%';
+    lbl.textContent = pct < 50 ? 'Mengupload file\u2026' : 'Memproses data\u2026';
+  }, 300);
+  window.addEventListener('beforeunload', () => clearInterval(iv));
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
