@@ -192,12 +192,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
     }
 }
 
+$per_page_opts = [10, 20, 50];
+$per_page = in_array((int)($_GET['per'] ?? 20), $per_page_opts) ? (int)$_GET['per'] : 20;
+$cur_page = max(1, (int)($_GET['p'] ?? 1));
+
 try {
-    $logs = $pdo->query(
-        'SELECT * FROM `' . LOG_TABLE . '` ORDER BY uploaded_at DESC LIMIT 20'
-    )->fetchAll();
+    $total_logs  = (int)$pdo->query('SELECT COUNT(*) FROM `' . LOG_TABLE . '`')->fetchColumn();
+    $total_pages = max(1, (int)ceil($total_logs / $per_page));
+    $cur_page    = min($cur_page, $total_pages);
+    $offset      = ($cur_page - 1) * $per_page;
+    $stmt_logs   = $pdo->prepare('SELECT * FROM `' . LOG_TABLE . '` ORDER BY uploaded_at DESC LIMIT ? OFFSET ?');
+    $stmt_logs->bindValue(1, $per_page, PDO::PARAM_INT);
+    $stmt_logs->bindValue(2, $offset,   PDO::PARAM_INT);
+    $stmt_logs->execute();
+    $logs = $stmt_logs->fetchAll();
 } catch (Throwable $e) {
-    $logs = [];
+    $logs = []; $total_logs = 0; $total_pages = 1;
+}
+
+function _page_url(int $p, int $per): string {
+    $q = $_GET; $q['p'] = $p; $q['per'] = $per;
+    return '?' . http_build_query($q);
 }
 
 require_once __DIR__ . '/includes/header.php';
@@ -262,7 +277,9 @@ require_once __DIR__ . '/includes/header.php';
     <div class="card-header">
       <i class="ti ti-history" style="margin-right:.4rem;"></i>
       Riwayat Upload
-      <span style="margin-left:auto;font-size:.78rem;color:var(--muted);font-weight:400;">20 terakhir</span>
+      <span style="margin-left:auto;font-size:.78rem;color:var(--muted);font-weight:400;">
+        <?= number_format($total_logs) ?> entri
+      </span>
     </div>
     <?php if (empty($logs)): ?>
     <div class="empty-state" style="padding:2rem;">
@@ -319,6 +336,43 @@ require_once __DIR__ . '/includes/header.php';
         </tbody>
       </table>
     </div>
+    <!-- Pagination footer -->
+    <div class="log-pagination">
+      <div class="pag-info">
+        <?php
+          $from = ($cur_page - 1) * $per_page + 1;
+          $to   = min($cur_page * $per_page, $total_logs);
+          echo $from . '–' . $to . ' dari ' . number_format($total_logs);
+        ?>
+      </div>
+      <div class="pag-perpage">
+        Tampilkan:
+        <?php foreach ($per_page_opts as $opt): ?>
+          <?php if ($opt === $per_page): ?>
+            <span class="pag-per active"><?= $opt ?></span>
+          <?php else: ?>
+            <a class="pag-per" href="<?= htmlspecialchars(_page_url(1, $opt)) ?>"><?= $opt ?></a>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </div>
+      <div class="pag-nav">
+        <?php if ($cur_page > 1): ?>
+          <a class="pag-btn" href="<?= htmlspecialchars(_page_url(1, $per_page)) ?>" title="Pertama"><i class="ti ti-chevrons-left"></i></a>
+          <a class="pag-btn" href="<?= htmlspecialchars(_page_url($cur_page - 1, $per_page)) ?>" title="Sebelumnya"><i class="ti ti-chevron-left"></i></a>
+        <?php else: ?>
+          <span class="pag-btn disabled"><i class="ti ti-chevrons-left"></i></span>
+          <span class="pag-btn disabled"><i class="ti ti-chevron-left"></i></span>
+        <?php endif; ?>
+        <span class="pag-cur"><?= $cur_page ?> / <?= $total_pages ?></span>
+        <?php if ($cur_page < $total_pages): ?>
+          <a class="pag-btn" href="<?= htmlspecialchars(_page_url($cur_page + 1, $per_page)) ?>" title="Berikutnya"><i class="ti ti-chevron-right"></i></a>
+          <a class="pag-btn" href="<?= htmlspecialchars(_page_url($total_pages, $per_page)) ?>" title="Terakhir"><i class="ti ti-chevrons-right"></i></a>
+        <?php else: ?>
+          <span class="pag-btn disabled"><i class="ti ti-chevron-right"></i></span>
+          <span class="pag-btn disabled"><i class="ti ti-chevrons-right"></i></span>
+        <?php endif; ?>
+      </div>
+    </div>
     <?php endif; ?>
   </div>
 
@@ -369,6 +423,41 @@ require_once __DIR__ . '/includes/header.php';
   .upload-grid .card:last-child  { flex: 1; min-width: 0; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Pagination ───────────────────────────────────────────── */
+.log-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem .75rem;
+  padding: .65rem 1rem;
+  border-top: .5px solid var(--border);
+  font-size: .8rem;
+  color: var(--muted);
+}
+.pag-info { flex: 1; white-space: nowrap; }
+.pag-perpage { display: flex; align-items: center; gap: .3rem; }
+.pag-per {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 28px; padding: 0 .4rem;
+  border-radius: var(--radius); font-size: .8rem; text-decoration: none;
+  color: var(--muted); border: .5px solid transparent;
+}
+.pag-per:hover     { background: var(--bg); color: var(--text); }
+.pag-per.active    { background: var(--blue-lt); color: var(--blue); border-color: var(--blue-bd); font-weight: 600; }
+.pag-nav { display: flex; align-items: center; gap: .2rem; }
+.pag-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: var(--radius);
+  color: var(--muted); text-decoration: none; font-size: .95rem;
+  border: .5px solid transparent;
+}
+.pag-btn:hover      { background: var(--bg); color: var(--text); }
+.pag-btn.disabled   { opacity: .35; pointer-events: none; }
+.pag-cur {
+  padding: 0 .5rem; font-size: .8rem; color: var(--text);
+  font-weight: 500; white-space: nowrap;
+}
 </style>
 
 <script>
