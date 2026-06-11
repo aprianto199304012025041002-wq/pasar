@@ -195,19 +195,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
 }
 
 $per_page_opts = [10, 20, 50];
-$per_page = in_array((int)($_GET['per'] ?? 20), $per_page_opts) ? (int)$_GET['per'] : 20;
-$cur_page = max(1, (int)($_GET['p'] ?? 1));
+$per_page_raw  = (int)($_GET['per'] ?? 20);
+$per_page      = in_array($per_page_raw, $per_page_opts) ? $per_page_raw : 20;
+$cur_page      = max(1, (int)($_GET['p'] ?? 1));
 
 try {
-    $total_logs  = (int)$pdo->query('SELECT COUNT(*) FROM `' . LOG_TABLE . '`')->fetchColumn();
-    $total_pages = max(1, (int)ceil($total_logs / $per_page));
+    // Pastikan tabel ada dulu sebelum query
+    $tbl_exists = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables
+        WHERE table_schema = DATABASE() AND table_name = '" . LOG_TABLE . "'")->fetchColumn();
+
+    if ($tbl_exists) {
+        $total_logs  = (int)$pdo->query('SELECT COUNT(*) FROM `' . LOG_TABLE . '`')->fetchColumn();
+    } else {
+        $total_logs = 0;
+    }
+
+    $total_pages = ($total_logs > 0) ? (int)ceil($total_logs / $per_page) : 1;
     $cur_page    = min($cur_page, $total_pages);
     $offset      = ($cur_page - 1) * $per_page;
-    $stmt_logs   = $pdo->prepare('SELECT * FROM `' . LOG_TABLE . '` ORDER BY uploaded_at DESC LIMIT ? OFFSET ?');
-    $stmt_logs->bindValue(1, $per_page, PDO::PARAM_INT);
-    $stmt_logs->bindValue(2, $offset,   PDO::PARAM_INT);
-    $stmt_logs->execute();
-    $logs = $stmt_logs->fetchAll();
+
+    if ($total_logs > 0) {
+        $stmt_logs = $pdo->prepare('SELECT * FROM `' . LOG_TABLE . '` ORDER BY uploaded_at DESC LIMIT ? OFFSET ?');
+        $stmt_logs->bindValue(1, $per_page, PDO::PARAM_INT);
+        $stmt_logs->bindValue(2, $offset,   PDO::PARAM_INT);
+        $stmt_logs->execute();
+        $logs = $stmt_logs->fetchAll();
+    } else {
+        $logs = [];
+    }
     $log_query_err = null;
 } catch (Throwable $e) {
     $logs = []; $total_logs = 0; $total_pages = 1;
@@ -238,11 +253,7 @@ require_once __DIR__ . '/includes/header.php';
       <?php if ($result['success'] && isset($result['rows'])): ?>
         — <strong><?= number_format($result['rows']) ?> baris</strong> berhasil dimasukkan ke tabel.
       <?php endif; ?>
-      <?php if (!empty($result['_log_err'])): ?>
-        <br><small style="color:var(--red);">Log error: <?= htmlspecialchars($result['_log_err']) ?></small>
-      <?php elseif (!empty($result['_log_id'])): ?>
-        <br><small style="color:var(--muted);">Log ID: <?= $result['_log_id'] ?> | Total log: <?= $total_logs ?></small>
-      <?php endif; ?>
+
     </div>
   </div>
   <button class="toast-close" onclick="document.getElementById('upload-toast').style.display='none'" aria-label="Tutup">
@@ -250,11 +261,7 @@ require_once __DIR__ . '/includes/header.php';
   </button>
 </div>
 <?php endif; ?>
-<?php if ($log_query_err): ?>
-<div style="background:#fff3cd;border:.5px solid #ffc107;padding:.6rem 1rem;border-radius:var(--radius);margin-bottom:1rem;font-size:.82rem;color:#856404;">
-  <strong>Debug log query error:</strong> <?= htmlspecialchars($log_query_err) ?>
-</div>
-<?php endif; ?>
+
 
 <div class="upload-grid">
 
