@@ -18,7 +18,6 @@ $KNOWN_COLUMNS = [
     'LAT_DIR_IND','LONG_DEG','LONG_MIN','LONG_SEC','LONG_DIR_IND','AREA_OF_SERVICE',
 ];
 
-// ── Helpers dideklarasikan dulu sebelum dipanggil ──────────────────────────────
 function _read_xlsx(string $path): array {
     $zip = new ZipArchive();
     if ($zip->open($path) !== true) throw new Exception('Tidak bisa membuka file XLSX.');
@@ -89,7 +88,6 @@ function _fmt_bytes(int $bytes): string {
     return $bytes . ' B';
 }
 
-// ── Pastikan tabel log ada ─────────────────────────────────────────────────────
 try {
     $pdo->exec('CREATE TABLE IF NOT EXISTS `' . LOG_TABLE . '` (
         `id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -109,7 +107,6 @@ try {
     error_log('[laporan] Gagal buat tabel log: ' . $e->getMessage());
 }
 
-// ── Proses upload ─────────────────────────────────────────────────────────────
 $result = null;
 $me     = get_user();
 
@@ -148,27 +145,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
                 $result = ['success' => true, 'message' => 'File SQL berhasil dieksekusi.', 'rows' => null];
             } else {
                 $rows = $ext === 'xlsx' ? _read_xlsx($tmpPath) : _read_csv($tmpPath);
-
                 if (empty($rows)) throw new Exception('File kosong atau tidak ada data yang terbaca.');
-
                 $headers = array_map('trim', array_shift($rows));
                 if (empty($headers)) throw new Exception('Header kolom tidak ditemukan.');
-
                 $matched = array_intersect($headers, $KNOWN_COLUMNS);
                 if (count($matched) < 3) {
                     throw new Exception('Kolom tidak cocok dengan format yang dikenal.');
                 }
-
-                // TRUNCATE implicitly commits, so do it BEFORE opening transaction
                 _ensure_table($pdo, TARGET_TABLE, $headers);
                 $pdo->exec('TRUNCATE TABLE `' . TARGET_TABLE . '`');
-
                 $cols_escaped = array_map(fn($c) => '`' . $c . '`', $headers);
                 $placeholders = implode(', ', array_fill(0, count($headers), '?'));
                 $stmt = $pdo->prepare(
                     'INSERT INTO `' . TARGET_TABLE . '` (' . implode(', ', $cols_escaped) . ') VALUES (' . $placeholders . ')'
                 );
-
                 $pdo->beginTransaction();
                 foreach ($rows as $row) {
                     $row = array_slice(array_pad($row, count($headers), null), 0, count($headers));
@@ -176,7 +166,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
                     $stmt->execute($row);
                 }
                 $pdo->commit();
-
                 $log['status']    = 'success';
                 $log['row_count'] = count($rows);
                 $log['note']      = 'TRUNCATE + INSERT ' . count($rows) . ' baris';
@@ -189,7 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
         }
     }
 
-    // Simpan log — dibungkus try-catch agar error log tidak crash halaman
     try {
         $pdo->prepare('INSERT INTO `' . LOG_TABLE . '`
             (user_id, user_name, user_email, user_role, file_name, file_type, file_size, row_count, status, note)
@@ -204,7 +192,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
     }
 }
 
-// ── Ambil riwayat log (20 terbaru) ────────────────────────────────────────────
 try {
     $logs = $pdo->query(
         'SELECT * FROM `' . LOG_TABLE . '` ORDER BY uploaded_at DESC LIMIT 20'
@@ -221,125 +208,172 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <?php if ($result): ?>
-<div class="alert <?= $result['success'] ? 'alert-success' : 'alert-danger' ?>" role="alert" style="margin-bottom:1.25rem;">
-  <i class="ti <?= $result['success'] ? 'ti-circle-check' : 'ti-alert-circle' ?>"></i>
-  <?= htmlspecialchars($result['message']) ?>
-  <?php if ($result['success'] && isset($result['rows'])): ?>
-    &mdash; <strong><?= number_format($result['rows']) ?></strong> baris berhasil dimasukkan.
-  <?php endif; ?>
+<div class="upload-toast <?= $result['success'] ? 'toast-success' : 'toast-danger' ?>" id="upload-toast" role="alert">
+  <div class="toast-icon">
+    <i class="ti <?= $result['success'] ? 'ti-circle-check' : 'ti-alert-circle' ?>"></i>
+  </div>
+  <div class="toast-body">
+    <div class="toast-title"><?= $result['success'] ? 'Upload Berhasil' : 'Upload Gagal' ?></div>
+    <div class="toast-msg">
+      <?= htmlspecialchars($result['message']) ?>
+      <?php if ($result['success'] && isset($result['rows'])): ?>
+        — <strong><?= number_format($result['rows']) ?> baris</strong> berhasil dimasukkan ke tabel.
+      <?php endif; ?>
+    </div>
+  </div>
+  <button class="toast-close" onclick="document.getElementById('upload-toast').style.display='none'" aria-label="Tutup">
+    <i class="ti ti-x"></i>
+  </button>
 </div>
 <?php endif; ?>
 
-<div class="card" style="max-width:640px;">
-  <div class="card-header">
-    <i class="ti ti-file-upload" style="margin-right:.4rem;"></i>
-    Upload File Data
-  </div>
-  <div class="card-body">
-    <form method="post" enctype="multipart/form-data" id="upload-form">
-      <div class="form-group" style="margin-bottom:1rem;">
-        <label for="datafile" style="display:block;margin-bottom:.4rem;font-weight:500;">File</label>
-        <input type="file" id="datafile" name="datafile" accept=".xlsx,.csv,.sql" required
-               style="display:block;width:100%;padding:.5rem .75rem;border:.5px solid var(--border-md);border-radius:var(--radius);background:var(--surface);color:inherit;font-size:.9rem;">
-        <small style="color:var(--muted);">Format: .xlsx, .csv, .sql &mdash; maks. 32 MB</small>
-      </div>
+<div class="upload-grid">
 
-      <div class="form-group" style="margin-bottom:1.25rem;">
-        <label style="display:block;margin-bottom:.4rem;font-weight:500;">Target tabel</label>
-        <input type="text" value="<?= htmlspecialchars(TARGET_TABLE) ?>" disabled
-               style="display:block;width:100%;padding:.5rem .75rem;border:.5px solid var(--border-md);border-radius:var(--radius);background:var(--bg);color:inherit;font-size:.9rem;">
-      </div>
-
-      <div id="upload-progress" style="display:none;margin-bottom:1rem;">
-        <div style="height:5px;background:var(--bg);border-radius:99px;overflow:hidden;">
-          <div id="progress-bar" style="height:100%;width:0;background:var(--blue);transition:width .3s;border-radius:99px;"></div>
+  <div class="card">
+    <div class="card-header">
+      <i class="ti ti-file-upload" style="margin-right:.4rem;"></i>
+      Upload File Data
+    </div>
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data" id="upload-form">
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label for="datafile" style="display:block;margin-bottom:.4rem;font-weight:500;">File</label>
+          <input type="file" id="datafile" name="datafile" accept=".xlsx,.csv,.sql" required
+                 style="display:block;width:100%;padding:.5rem .75rem;border:.5px solid var(--border-md);border-radius:var(--radius);background:var(--surface);color:inherit;font-size:.9rem;">
+          <small style="color:var(--muted);">Format: .xlsx, .csv, .sql &mdash; maks. 32 MB</small>
         </div>
-        <small id="progress-label" style="color:var(--muted);">Mengupload…</small>
-      </div>
 
-      <button type="submit" class="btn btn-primary" id="upload-btn">
-        <i class="ti ti-upload"></i>
-        Upload &amp; Proses
-      </button>
-    </form>
-  </div>
-</div>
+        <div id="upload-progress" style="display:none;margin-bottom:1.25rem;">
+          <div style="height:5px;background:var(--bg);border-radius:99px;overflow:hidden;">
+            <div id="progress-bar" style="height:100%;width:0;background:var(--blue);transition:width .3s;border-radius:99px;"></div>
+          </div>
+          <small id="progress-label" style="color:var(--muted);display:block;margin-top:.35rem;">Mengupload…</small>
+        </div>
 
-<!-- Riwayat Upload -->
-<div class="card" style="max-width:900px;margin-top:1.25rem;">
-  <div class="card-header">
-    <i class="ti ti-history" style="margin-right:.4rem;"></i>
-    Riwayat Upload
-    <span style="margin-left:auto;font-size:.78rem;color:var(--muted);font-weight:400;">20 terakhir</span>
+        <button type="submit" class="btn btn-primary" id="upload-btn" style="width:100%;">
+          <i class="ti ti-upload"></i>
+          Upload &amp; Proses
+        </button>
+      </form>
+    </div>
   </div>
-  <?php if (empty($logs)): ?>
-  <div class="empty-state" style="padding:2rem;">
-    <i class="ti ti-inbox" aria-hidden="true"></i>
-    <div>Belum ada riwayat upload.</div>
+
+  <div class="card">
+    <div class="card-header">
+      <i class="ti ti-history" style="margin-right:.4rem;"></i>
+      Riwayat Upload
+      <span style="margin-left:auto;font-size:.78rem;color:var(--muted);font-weight:400;">20 terakhir</span>
+    </div>
+    <?php if (empty($logs)): ?>
+    <div class="empty-state" style="padding:2rem;">
+      <i class="ti ti-inbox" aria-hidden="true"></i>
+      <div>Belum ada riwayat upload.</div>
+    </div>
+    <?php else: ?>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>User</th>
+            <th>File</th>
+            <th>Ukuran</th>
+            <th>Baris</th>
+            <th>Status</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($logs as $l): ?>
+          <tr>
+            <td class="td-mono" style="white-space:nowrap;">
+              <?= date('d/m/Y H:i', strtotime($l['uploaded_at'])) ?>
+            </td>
+            <td>
+              <div style="font-weight:500;font-size:.85rem;"><?= htmlspecialchars($l['user_name']) ?></div>
+              <div style="font-size:.78rem;color:var(--muted);"><?= htmlspecialchars($l['user_email']) ?></div>
+            </td>
+            <td style="max-width:180px;">
+              <div style="font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<?= htmlspecialchars($l['file_name']) ?>">
+                <?= htmlspecialchars($l['file_name']) ?>
+              </div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;"><?= htmlspecialchars($l['file_type']) ?></div>
+            </td>
+            <td class="td-muted" style="white-space:nowrap;"><?= _fmt_bytes((int)$l['file_size']) ?></td>
+            <td style="text-align:right;font-weight:500;">
+              <?= $l['row_count'] !== null ? number_format((int)$l['row_count']) : '—' ?>
+            </td>
+            <td>
+              <?php if ($l['status'] === 'success'): ?>
+                <span class="badge badge-granted"><i class="ti ti-check"></i> Berhasil</span>
+              <?php else: ?>
+                <span class="badge badge-broadcast"><i class="ti ti-x"></i> Gagal</span>
+              <?php endif; ?>
+            </td>
+            <td style="font-size:.8rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                title="<?= htmlspecialchars($l['note']) ?>">
+              <?= htmlspecialchars($l['note']) ?>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
   </div>
-  <?php else: ?>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Waktu</th>
-          <th>User</th>
-          <th>File</th>
-          <th>Ukuran</th>
-          <th>Baris</th>
-          <th>Status</th>
-          <th>Keterangan</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($logs as $l): ?>
-        <tr>
-          <td class="td-mono" style="white-space:nowrap;">
-            <?= date('d/m/Y H:i', strtotime($l['uploaded_at'])) ?>
-          </td>
-          <td>
-            <div style="font-weight:500;font-size:.85rem;"><?= htmlspecialchars($l['user_name']) ?></div>
-            <div style="font-size:.78rem;color:var(--muted);"><?= htmlspecialchars($l['user_email']) ?></div>
-          </td>
-          <td style="max-width:200px;">
-            <div style="font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<?= htmlspecialchars($l['file_name']) ?>">
-              <?= htmlspecialchars($l['file_name']) ?>
-            </div>
-            <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;"><?= htmlspecialchars($l['file_type']) ?></div>
-          </td>
-          <td class="td-muted" style="white-space:nowrap;"><?= _fmt_bytes((int)$l['file_size']) ?></td>
-          <td style="text-align:right;font-weight:500;">
-            <?= $l['row_count'] !== null ? number_format((int)$l['row_count']) : '—' ?>
-          </td>
-          <td>
-            <?php if ($l['status'] === 'success'): ?>
-              <span class="badge badge-granted"><i class="ti ti-check"></i> Berhasil</span>
-            <?php else: ?>
-              <span class="badge badge-broadcast"><i class="ti ti-x"></i> Gagal</span>
-            <?php endif; ?>
-          </td>
-          <td style="font-size:.8rem;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-              title="<?= htmlspecialchars($l['note']) ?>">
-            <?= htmlspecialchars($l['note']) ?>
-          </td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-  <?php endif; ?>
-</div>
+
+</div><!-- /.upload-grid -->
 
 <style>
-.alert{display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1rem;border-radius:var(--radius-lg);font-size:.9rem;border:.5px solid transparent;}
-.alert-success{background:var(--green-lt);border-color:#6ee7b7;color:var(--green);}
-.alert-danger{background:var(--red-lt);border-color:#fca5a5;color:var(--red);}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ── Toast notifikasi ─────────────────────────────────────── */
+.upload-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-lg);
+  border: .5px solid transparent;
+  margin-bottom: 1.25rem;
+  animation: toast-in .25s ease;
+}
+.toast-success { background: var(--green-lt); border-color: #6ee7b7; }
+.toast-danger  { background: var(--red-lt);   border-color: #fca5a5; }
+.toast-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; padding-top: .05rem; }
+.toast-success .toast-icon { color: var(--green); }
+.toast-danger  .toast-icon { color: var(--red); }
+.toast-body { flex: 1; min-width: 0; }
+.toast-title { font-weight: 600; font-size: .9rem; margin-bottom: .2rem; }
+.toast-success .toast-title { color: var(--green); }
+.toast-danger  .toast-title { color: var(--red); }
+.toast-msg { font-size: .85rem; color: var(--text); line-height: 1.5; }
+.toast-close {
+  background: none; border: none; cursor: pointer; padding: .15rem .25rem;
+  color: var(--muted); font-size: 1rem; flex-shrink: 0;
+  border-radius: var(--radius); line-height: 1; margin-top: .05rem;
+}
+.toast-close:hover { color: var(--text); background: rgba(0,0,0,.06); }
+@keyframes toast-in { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+/* ── Layout grid ──────────────────────────────────────────── */
+.upload-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (min-width: 900px) {
+  .upload-grid {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .upload-grid .card:first-child { flex: 0 0 320px; }
+  .upload-grid .card:last-child  { flex: 1; min-width: 0; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
 <script>
 document.getElementById('upload-form').addEventListener('submit', function () {
-  const btn = document.getElementById('upload-btn');
+  const btn  = document.getElementById('upload-btn');
   const prog = document.getElementById('upload-progress');
   const bar  = document.getElementById('progress-bar');
   const lbl  = document.getElementById('progress-label');
