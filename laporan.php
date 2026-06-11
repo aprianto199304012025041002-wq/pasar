@@ -331,8 +331,8 @@ require_once __DIR__ . '/includes/header.php';
               <div style="font-weight:500;font-size:.85rem;"><?= htmlspecialchars($l['user_name']) ?></div>
               <div style="font-size:.78rem;color:var(--muted);"><?= htmlspecialchars($l['user_email']) ?></div>
             </td>
-            <td style="max-width:180px;">
-              <div style="font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<?= htmlspecialchars($l['file_name']) ?>">
+            <td style="min-width:160px;">
+              <div style="font-size:.85rem;word-break:break-word;">
                 <?= htmlspecialchars($l['file_name']) ?>
               </div>
               <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;"><?= htmlspecialchars($l['file_type']) ?></div>
@@ -348,9 +348,12 @@ require_once __DIR__ . '/includes/header.php';
                 <span class="badge badge-broadcast"><i class="ti ti-x"></i> Gagal</span>
               <?php endif; ?>
             </td>
-            <td style="font-size:.8rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                title="<?= htmlspecialchars($l['note']) ?>">
-              <?= htmlspecialchars($l['note']) ?>
+            <td style="font-size:.8rem;max-width:240px;">
+              <?php if ($l['status'] === 'success'): ?>
+                <span style="color:var(--muted);"><?= htmlspecialchars($l['note']) ?></span>
+              <?php else: ?>
+                <span style="color:var(--red);word-break:break-word;"><?= htmlspecialchars($l['note']) ?></span>
+              <?php endif; ?>
             </td>
           </tr>
           <?php endforeach; ?>
