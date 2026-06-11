@@ -187,8 +187,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
                 $log['file_name'], $log['file_type'],  $log['file_size'],
                 $log['row_count'], $log['status'],     $log['note'],
             ]);
+        $result['_log_id'] = $pdo->lastInsertId();
     } catch (Throwable $e) {
         error_log('[laporan] Gagal simpan log: ' . $e->getMessage());
+        $result['_log_err'] = $e->getMessage();
     }
 }
 
@@ -206,8 +208,10 @@ try {
     $stmt_logs->bindValue(2, $offset,   PDO::PARAM_INT);
     $stmt_logs->execute();
     $logs = $stmt_logs->fetchAll();
+    $log_query_err = null;
 } catch (Throwable $e) {
     $logs = []; $total_logs = 0; $total_pages = 1;
+    $log_query_err = $e->getMessage();
 }
 
 function _page_url(int $p, int $per): string {
@@ -234,11 +238,21 @@ require_once __DIR__ . '/includes/header.php';
       <?php if ($result['success'] && isset($result['rows'])): ?>
         — <strong><?= number_format($result['rows']) ?> baris</strong> berhasil dimasukkan ke tabel.
       <?php endif; ?>
+      <?php if (!empty($result['_log_err'])): ?>
+        <br><small style="color:var(--red);">Log error: <?= htmlspecialchars($result['_log_err']) ?></small>
+      <?php elseif (!empty($result['_log_id'])): ?>
+        <br><small style="color:var(--muted);">Log ID: <?= $result['_log_id'] ?> | Total log: <?= $total_logs ?></small>
+      <?php endif; ?>
     </div>
   </div>
   <button class="toast-close" onclick="document.getElementById('upload-toast').style.display='none'" aria-label="Tutup">
     <i class="ti ti-x"></i>
   </button>
+</div>
+<?php endif; ?>
+<?php if ($log_query_err): ?>
+<div style="background:#fff3cd;border:.5px solid #ffc107;padding:.6rem 1rem;border-radius:var(--radius);margin-bottom:1rem;font-size:.82rem;color:#856404;">
+  <strong>Debug log query error:</strong> <?= htmlspecialchars($log_query_err) ?>
 </div>
 <?php endif; ?>
 
