@@ -15,45 +15,47 @@ $district   = trim($_GET['district']   ?? '');
 $page_num   = max(1, intval($_GET['page'] ?? 1));
 $per_page   = PER_PAGE;
 
+// Koordinat user untuk sort jarak
+$user_lat   = isset($_GET['ulat']) && is_numeric($_GET['ulat']) ? floatval($_GET['ulat']) : null;
+$user_lng   = isset($_GET['ulng']) && is_numeric($_GET['ulng']) ? floatval($_GET['ulng']) : null;
+$sort_dist  = ($user_lat !== null && $user_lng !== null);
+
 // ── Dropdown options ──────────────────────────────────────────
-$services    = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
-$provinces   = $pdo->query("SELECT DISTINCT province FROM isr WHERE province IS NOT NULL ORDER BY province")->fetchAll(PDO::FETCH_COLUMN);
+$services  = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
+$provinces = $pdo->query("SELECT DISTINCT province FROM isr WHERE province IS NOT NULL ORDER BY province")->fetchAll(PDO::FETCH_COLUMN);
 
-// Sub-layanan: filter by service if selected
 if ($service !== '') {
-    $ss_stmt = $pdo->prepare("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL AND service = ? ORDER BY subservice");
-    $ss_stmt->execute([$service]);
+    $ss = $pdo->prepare("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL AND service = ? ORDER BY subservice");
+    $ss->execute([$service]);
 } else {
-    $ss_stmt = $pdo->query("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL ORDER BY subservice");
+    $ss = $pdo->query("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL ORDER BY subservice");
 }
-$subservices = $ss_stmt->fetchAll(PDO::FETCH_COLUMN);
+$subservices = $ss->fetchAll(PDO::FETCH_COLUMN);
 
-// Kabupaten: filter by province if selected
 if ($province !== '') {
-    $city_stmt = $pdo->prepare("SELECT DISTINCT city FROM isr WHERE city IS NOT NULL AND province = ? ORDER BY city");
-    $city_stmt->execute([$province]);
+    $cs = $pdo->prepare("SELECT DISTINCT city FROM isr WHERE city IS NOT NULL AND province = ? ORDER BY city");
+    $cs->execute([$province]);
 } else {
-    $city_stmt = $pdo->query("SELECT DISTINCT city FROM isr WHERE city IS NOT NULL ORDER BY city");
+    $cs = $pdo->query("SELECT DISTINCT city FROM isr WHERE city IS NOT NULL ORDER BY city");
 }
-$cities = $city_stmt->fetchAll(PDO::FETCH_COLUMN);
+$cities = $cs->fetchAll(PDO::FETCH_COLUMN);
 
-// Kecamatan: filter by city if selected
 if ($city !== '') {
-    $dist_stmt = $pdo->prepare("SELECT DISTINCT district FROM isr WHERE district IS NOT NULL AND city = ? ORDER BY district");
-    $dist_stmt->execute([$city]);
+    $ds = $pdo->prepare("SELECT DISTINCT district FROM isr WHERE district IS NOT NULL AND city = ? ORDER BY district");
+    $ds->execute([$city]);
 } else {
-    $dist_stmt = $pdo->query("SELECT DISTINCT district FROM isr WHERE district IS NOT NULL ORDER BY district");
+    $ds = $pdo->query("SELECT DISTINCT district FROM isr WHERE district IS NOT NULL ORDER BY district");
 }
-$districts = $dist_stmt->fetchAll(PDO::FETCH_COLUMN);
+$districts = $ds->fetchAll(PDO::FETCH_COLUMN);
 
 // ── Build WHERE ───────────────────────────────────────────────
 $where  = [];
 $params = [];
 
 if ($q !== '') {
-    $where[]  = "(clnt_name LIKE ? OR curr_lic_num LIKE ? OR stn_name LIKE ?)";
+    $where[]  = "(clnt_name LIKE ? OR curr_lic_num LIKE ? OR stn_name LIKE ? OR CAST(freq AS CHAR) LIKE ?)";
     $like     = '%' . $q . '%';
-    $params[] = $like; $params[] = $like; $params[] = $like;
+    $params[] = $like; $params[] = $like; $params[] = $like; $params[] = $like;
 }
 if ($service    !== '') { $where[] = "service = ?";    $params[] = $service;    }
 if ($subservice !== '') { $where[] = "subservice = ?"; $params[] = $subservice; }
@@ -61,7 +63,27 @@ if ($province   !== '') { $where[] = "province = ?";   $params[] = $province;   
 if ($city       !== '') { $where[] = "city = ?";       $params[] = $city;       }
 if ($district   !== '') { $where[] = "district = ?";   $params[] = $district;   }
 
+// Kalau sort jarak, wajib ada koordinat valid
+if ($sort_dist) {
+    $where[] = "sid_lat IS NOT NULL AND sid_long IS NOT NULL";
+    $where[] = "sid_lat BETWEEN -11 AND 6 AND sid_long BETWEEN 95 AND 141";
+}
+
 $clause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+// ── Haversine expression (MySQL) ──────────────────────────────
+// 6371 * 2 * ASIN(SQRT(POW(SIN((...)/2),2) + COS()*COS()*POW(SIN((...)/2),2)))
+$haversine_expr = '';
+$dist_params    = [];
+if ($sort_dist) {
+    $haversine_expr = "
+        (6371 * 2 * ASIN(SQRT(
+            POW(SIN((RADIANS(sid_lat) - RADIANS(?)) / 2), 2) +
+            COS(RADIANS(?)) * COS(RADIANS(sid_lat)) *
+            POW(SIN((RADIANS(sid_long) - RADIANS(?)) / 2), 2)
+        ))) AS dist_km";
+    $dist_params = [$user_lat, $user_lat, $user_lng];
+}
 
 // ── Count ─────────────────────────────────────────────────────
 $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM isr $clause");
@@ -72,17 +94,25 @@ $page_num    = min($page_num, $total_pages);
 $offset      = ($page_num - 1) * $per_page;
 
 // ── Data ──────────────────────────────────────────────────────
-$data_stmt = $pdo->prepare(
-    "SELECT id, clnt_name, service, subservice,
-            curr_lic_num, stn_name, validity_date
-     FROM isr $clause
-     ORDER BY clnt_name ASC
-     LIMIT $per_page OFFSET $offset"
-);
-$data_stmt->execute($params);
+$select_dist = $sort_dist ? ", $haversine_expr" : ", NULL AS dist_km";
+$order_by    = $sort_dist ? "ORDER BY dist_km ASC" : "ORDER BY clnt_name ASC";
+
+$data_sql = "SELECT id, clnt_name, service, subservice,
+                    curr_lic_num, stn_name, validity_date, freq,
+                    sid_lat, sid_long
+                    $select_dist
+             FROM isr $clause
+             $order_by
+             LIMIT $per_page OFFSET $offset";
+
+// Parameter: dist_params muncul di SELECT sebelum WHERE params
+$exec_params = $sort_dist ? array_merge($dist_params, $params) : $params;
+
+$data_stmt = $pdo->prepare($data_sql);
+$data_stmt->execute($exec_params);
 $rows = $data_stmt->fetchAll();
 
-// ── Badge helper ──────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────
 function svc_badge(string $svc): string {
     $map = [
         'Fixed Service'         => 'badge-fixed',
@@ -95,11 +125,15 @@ function svc_badge(string $svc): string {
     return '<span class="badge ' . $cls . '">' . htmlspecialchars($svc) . '</span>';
 }
 
-// ── Pagination URL builder ────────────────────────────────────
 function page_url(int $p): string {
     $params = $_GET;
     $params['page'] = $p;
     return '?' . http_build_query($params);
+}
+
+function fmt_dist(float $km): string {
+    if ($km < 1) return number_format($km * 1000, 0) . ' m';
+    return number_format($km, 2, ',', '.') . ' km';
 }
 
 require_once __DIR__ . '/includes/header.php';
@@ -107,23 +141,29 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="page-title">
   Data ISR
-  <div class="page-sub">Total <?= number_format($total_rows, 0, ',', '.') ?> record ditemukan</div>
+  <div class="page-sub">Total <?= number_format($total_rows, 0, ',', '.') ?> record ditemukan<?= $sort_dist ? ' · diurutkan dari lokasi Anda' : '' ?></div>
 </div>
 
 <div class="card">
 
-  <!-- Filter + Search Bar -->
-  <form method="get" action="">
+  <!-- Filter + Search -->
+  <form method="get" action="" id="data-form">
+    <!-- Field koordinat user (hidden, diisi JS) -->
+    <input type="hidden" name="ulat" id="f-ulat" value="<?= htmlspecialchars($_GET['ulat'] ?? '') ?>">
+    <input type="hidden" name="ulng" id="f-ulng" value="<?= htmlspecialchars($_GET['ulng'] ?? '') ?>">
+
     <div class="filter-compact">
 
+      <!-- Baris 1: Search -->
       <div class="filter-search-row">
         <div class="search-wrap">
           <i class="ti ti-search"></i>
           <input type="search" name="q" id="q" value="<?= htmlspecialchars($q) ?>"
-                 placeholder="Cari nama klien, stasiun, atau No. ISR...">
+                 placeholder="Cari nama klien, stasiun, No. ISR, atau frekuensi (MHz)...">
         </div>
       </div>
 
+      <!-- Baris 2: Dropdowns + actions -->
       <div class="filter-dropdowns-row">
         <div class="form-group">
           <label>Layanan</label>
@@ -191,6 +231,41 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </div>
 
+      <!-- Baris 3: Sort jarak -->
+      <div id="loc-bar" style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--muted);flex-shrink:0">Urutkan dari:</span>
+
+        <!-- Tombol GPS -->
+        <button type="button" id="btn-gps" class="btn" style="font-size:11px;padding:4px 9px;flex-shrink:0<?= $sort_dist ? ';color:#2563EB;border-color:#93c5fd' : '' ?>">
+          <i class="ti ti-current-location<?= $sort_dist ? '-filled' : '' ?>"></i>
+          <?= $sort_dist ? 'Lokasi aktif' : 'Lokasi saya (GPS)' ?>
+        </button>
+
+        <!-- Input manual -->
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <input type="number" id="inp-lat" placeholder="Latitude"
+                 value="<?= htmlspecialchars($_GET['ulat'] ?? '') ?>"
+                 step="0.000001" style="width:110px;font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
+          <input type="number" id="inp-lng" placeholder="Longitude"
+                 value="<?= htmlspecialchars($_GET['ulng'] ?? '') ?>"
+                 step="0.000001" style="width:110px;font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
+          <button type="button" id="btn-apply-coord" class="btn" style="font-size:11px;padding:4px 9px;flex-shrink:0">
+            <i class="ti ti-check"></i> Terapkan
+          </button>
+        </div>
+
+        <?php if ($sort_dist): ?>
+        <span style="font-size:11px;color:#2563EB;flex-shrink:0">
+          <i class="ti ti-map-pin" style="font-size:10px"></i>
+          <?= number_format($user_lat, 6) ?>, <?= number_format($user_lng, 6) ?>
+        </span>
+        <a href="<?= htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?') . '?' . http_build_query(array_diff_key($_GET, ['ulat'=>1,'ulng'=>1,'page'=>1]))) ?>"
+           style="font-size:11px;color:#dc2626;text-decoration:none;flex-shrink:0">
+          <i class="ti ti-x" style="font-size:10px"></i> Hapus lokasi
+        </a>
+        <?php endif; ?>
+      </div>
+
     </div>
   </form>
 
@@ -210,8 +285,10 @@ require_once __DIR__ . '/includes/header.php';
           <th>Layanan</th>
           <th>Sub-layanan</th>
           <th>Nama Stasiun</th>
+          <th>Frekuensi</th>
           <th>No. Lisensi</th>
           <th>Berlaku s/d</th>
+          <?php if ($sort_dist): ?><th><i class="ti ti-map-pin" style="font-size:12px"></i> Jarak</th><?php endif; ?>
           <th>Aksi</th>
         </tr>
       </thead>
@@ -219,7 +296,7 @@ require_once __DIR__ . '/includes/header.php';
         <?php foreach ($rows as $i => $row): ?>
         <tr>
           <td class="td-muted"><?= $offset + $i + 1 ?></td>
-          <td style="max-width:200px">
+          <td style="max-width:180px">
             <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                  title="<?= htmlspecialchars($row['clnt_name']) ?>">
               <?= htmlspecialchars($row['clnt_name']) ?>
@@ -227,14 +304,22 @@ require_once __DIR__ . '/includes/header.php';
           </td>
           <td><?= svc_badge($row['service'] ?? '') ?></td>
           <td class="td-muted"><?= htmlspecialchars($row['subservice'] ?? '-') ?></td>
-          <td style="max-width:160px">
+          <td style="max-width:140px">
             <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                  title="<?= htmlspecialchars($row['stn_name'] ?? '') ?>">
               <?= htmlspecialchars($row['stn_name'] ?? '-') ?>
             </div>
           </td>
+          <td class="td-mono" style="white-space:nowrap">
+            <?= $row['freq'] !== null ? number_format((float)$row['freq'], 3, ',', '.') . ' <span style="font-size:10px;color:var(--muted)">MHz</span>' : '<span class="td-muted">—</span>' ?>
+          </td>
           <td class="td-mono"><?= htmlspecialchars($row['curr_lic_num'] ?? '-') ?></td>
           <td class="td-muted"><?= htmlspecialchars($row['validity_date'] ?? '-') ?></td>
+          <?php if ($sort_dist): ?>
+          <td style="white-space:nowrap;font-size:12px;color:#2563EB;font-weight:500">
+            <?= $row['dist_km'] !== null ? fmt_dist((float)$row['dist_km']) : '—' ?>
+          </td>
+          <?php endif; ?>
           <td>
             <a href="detail.php?id=<?= $row['id'] ?>" class="btn" style="padding:4px 8px;font-size:11px">
               <i class="ti ti-eye"></i>
@@ -259,7 +344,6 @@ require_once __DIR__ . '/includes/header.php';
         <a href="<?= page_url(1) ?>"><i class="ti ti-chevrons-left" style="font-size:13px"></i></a>
         <a href="<?= page_url($page_num - 1) ?>"><i class="ti ti-chevron-left" style="font-size:13px"></i></a>
       <?php endif; ?>
-
       <?php
       $start = max(1, $page_num - 2);
       $end   = min($total_pages, $page_num + 2);
@@ -273,7 +357,6 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
       <?php endfor; ?>
       <?php if ($end < $total_pages) echo '<span class="dots">…</span>'; ?>
-
       <?php if ($page_num < $total_pages): ?>
         <a href="<?= page_url($page_num + 1) ?>"><i class="ti ti-chevron-right" style="font-size:13px"></i></a>
         <a href="<?= page_url($total_pages) ?>"><i class="ti ti-chevrons-right" style="font-size:13px"></i></a>
@@ -283,5 +366,59 @@ require_once __DIR__ . '/includes/header.php';
   <?php endif; ?>
 
 </div>
+
+<script>
+(function () {
+
+// ── GPS ───────────────────────────────────────────────────────
+document.getElementById('btn-gps').addEventListener('click', function () {
+  if (!navigator.geolocation) { alert('Browser tidak mendukung geolocation.'); return; }
+  var btn = this;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Mencari...';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      var lat = pos.coords.latitude;
+      var lng = pos.coords.longitude;
+      document.getElementById('f-ulat').value = lat;
+      document.getElementById('f-ulng').value = lng;
+      document.getElementById('inp-lat').value = lat.toFixed(6);
+      document.getElementById('inp-lng').value = lng.toFixed(6);
+      // Reset ke halaman 1 lalu submit
+      var pgInput = document.querySelector('input[name="page"]');
+      if (pgInput) pgInput.value = 1;
+      document.getElementById('data-form').submit();
+    },
+    function (err) {
+      var msg = {1:'Akses lokasi ditolak.',2:'Posisi tidak dapat ditentukan.',3:'Timeout.'}[err.code] || 'Gagal.';
+      alert(msg);
+      btn.innerHTML = '<i class="ti ti-current-location"></i> Lokasi saya (GPS)';
+      btn.disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+  );
+});
+
+// ── Input koordinat manual ────────────────────────────────────
+document.getElementById('btn-apply-coord').addEventListener('click', function () {
+  var lat = parseFloat(document.getElementById('inp-lat').value);
+  var lng = parseFloat(document.getElementById('inp-lng').value);
+  if (isNaN(lat) || isNaN(lng)) { alert('Masukkan latitude dan longitude yang valid.'); return; }
+  if (lat < -90 || lat > 90)    { alert('Latitude harus antara -90 dan 90.'); return; }
+  if (lng < -180 || lng > 180)  { alert('Longitude harus antara -180 dan 180.'); return; }
+  document.getElementById('f-ulat').value = lat;
+  document.getElementById('f-ulng').value = lng;
+  document.getElementById('data-form').submit();
+});
+
+// Enter di input koordinat juga apply
+['inp-lat','inp-lng'].forEach(function(id) {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('btn-apply-coord').click();
+  });
+});
+
+})();
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
