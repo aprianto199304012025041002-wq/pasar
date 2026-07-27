@@ -164,9 +164,35 @@ require_once __DIR__ . '/includes/header.php';
       <?php endforeach; ?>
     </div>
     <span id="map-count" style="font-size:12px;color:var(--muted);flex-shrink:0">Memuat...</span>
+    <button id="btn-myloc" class="btn" style="font-size:12px;padding:5px 10px;flex-shrink:0">
+      <i class="ti ti-current-location"></i> Lokasi Saya
+    </button>
     <button id="btn-cluster" class="btn" style="font-size:12px;padding:5px 10px;flex-shrink:0">
       <i class="ti ti-layout-grid"></i> Cluster: ON
     </button>
+  </div>
+
+  <!-- Panel radius — muncul setelah GPS didapat -->
+  <div id="radius-panel" style="display:none;flex-direction:column;gap:6px;padding:8px 12px;background:#EEF2FF;border-bottom:0.5px solid #c7d2fe">
+    <!-- Baris atas: label + count + hapus -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <i class="ti ti-radar" style="color:#4F46E5;font-size:15px;flex-shrink:0"></i>
+      <span style="font-size:12px;color:#3730a3;font-weight:600;flex-shrink:0">Radius dari posisi saya</span>
+      <span id="radius-count" style="font-size:12px;color:#6366f1;flex:1;min-width:0"></span>
+      <button id="btn-clear-loc" class="btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:#dc2626;border-color:#fca5a5;margin-left:auto">
+        <i class="ti ti-x"></i> Hapus
+      </button>
+    </div>
+    <!-- Baris bawah: slider + input -->
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="range" id="radius-slider" min="0.5" max="100" step="0.5" value="10"
+             style="flex:1;min-width:80px;accent-color:#4F46E5">
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <input type="number" id="radius-input" min="0.5" max="500" step="0.5" value="10"
+               style="width:64px;font-size:12px;padding:3px 6px;border:1px solid #c7d2fe;border-radius:6px;text-align:right">
+        <span style="font-size:12px;color:#6366f1;flex-shrink:0">km</span>
+      </div>
+    </div>
   </div>
 
   <!-- Map -->
@@ -187,6 +213,16 @@ require_once __DIR__ . '/includes/header.php';
 var SERVICE_COLORS = <?= json_encode($service_colors, JSON_UNESCAPED_UNICODE) ?>;
 var API_QS = <?= json_encode($api_qs) ?>;
 
+// ── State ─────────────────────────────────────────────────────
+var allFeatures  = [];   // semua fitur GeoJSON yang sudah di-fetch
+var userLat      = null;
+var userLng      = null;
+var radiusKm     = 10;
+var locMarker    = null; // marker posisi user
+var locCircle    = null; // lingkaran radius
+var locWatchId   = null;
+
+// ── Icon helpers ──────────────────────────────────────────────
 function makeIcon(color) {
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">'
           + '<circle cx="8" cy="8" r="6" fill="' + color + '" stroke="#fff" stroke-width="2"/>'
@@ -194,18 +230,40 @@ function makeIcon(color) {
   return L.divIcon({ html: svg, className: '', iconSize: [16,16], iconAnchor: [8,8], popupAnchor: [0,-10] });
 }
 
-// ── Map fullscreen sizing ─────────────────────────────────────
+function makeUserIcon() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">'
+          + '<circle cx="10" cy="10" r="7" fill="#2563EB" stroke="#fff" stroke-width="2.5"/>'
+          + '<circle cx="10" cy="10" r="3" fill="#fff"/>'
+          + '</svg>';
+  return L.divIcon({ html: svg, className: '', iconSize: [20,20], iconAnchor: [10,10], popupAnchor: [0,-12] });
+}
+
+// ── Haversine ─────────────────────────────────────────────────
+function haversine(lat1, lng1, lat2, lng2) {
+  var R  = 6371;
+  var dL = (lat2 - lat1) * Math.PI / 180;
+  var dG = (lng2 - lng1) * Math.PI / 180;
+  var a  = Math.sin(dL/2)*Math.sin(dL/2)
+          + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)
+          * Math.sin(dG/2)*Math.sin(dG/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── Map sizing ────────────────────────────────────────────────
 function setMapHeight() {
-  var card    = document.getElementById('peta-card');
-  var mapEl   = document.getElementById('map');
-  var toolbar = card.querySelector('.map-controls');
-  var form    = card.querySelector('form');
-  var cardTop = card.getBoundingClientRect().top + window.scrollY;
-  var used    = form.offsetHeight + toolbar.offsetHeight;
-  var available = window.innerHeight - cardTop - used - 2;
+  var card       = document.getElementById('peta-card');
+  var mapEl      = document.getElementById('map');
+  var toolbar    = card.querySelector('.map-controls');
+  var radPanel   = document.getElementById('radius-panel');
+  var form       = card.querySelector('form');
+  var cardTop    = card.getBoundingClientRect().top + window.scrollY;
+  var used       = form.offsetHeight + toolbar.offsetHeight
+                 + (radPanel.style.display !== 'none' ? radPanel.offsetHeight : 0);
+  var available  = window.innerHeight - cardTop - used - 2;
   mapEl.style.height = Math.max(280, available) + 'px';
 }
 
+// ── Map init ──────────────────────────────────────────────────
 var map = L.map('map').setView([-7.797, 110.370], 10);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
@@ -217,6 +275,62 @@ map.addLayer(clusterGroup);
 var useCluster = true;
 var plainGroup = L.layerGroup();
 
+// ── Build popup string ────────────────────────────────────────
+function buildPopup(p, distKm) {
+  var distStr = (distKm !== null)
+    ? '<div class="pop-meta" style="color:#2563EB;font-weight:600">'
+        + '<i class="ti ti-map-pin" style="font-size:10px"></i> '
+        + (distKm < 1 ? (distKm * 1000).toFixed(0) + ' m' : distKm.toFixed(2) + ' km') + ' dari lokasi Anda'
+      + '</div>'
+    : '';
+  return '<strong>' + (p.stn || p.name || '—') + '</strong>'
+    + distStr
+    + '<div class="pop-meta">' + (p.service || '') + (p.freq ? ' · ' + p.freq.toLocaleString('id-ID') + ' MHz' : '') + '</div>'
+    + '<div class="pop-meta">' + [p.district, p.city].filter(Boolean).join(', ') + '</div>'
+    + (p.lic ? '<div class="pop-meta" style="font-family:monospace;font-size:10px">' + p.lic + '</div>' : '')
+    + '<div style="margin-top:6px"><a href="<?= APP_BASE_URL ?>/detail.php?id=' + p.id + '" style="color:var(--blue);font-size:12px">Lihat detail →</a></div>';
+}
+
+// ── Render markers (dengan atau tanpa filter radius) ──────────
+function renderMarkers() {
+  clusterGroup.clearLayers();
+  plainGroup.clearLayers();
+
+  var filtered = [];
+  var hasLoc   = userLat !== null && userLng !== null;
+
+  allFeatures.forEach(function(f) {
+    var p      = f.properties;
+    var lat    = f.geometry.coordinates[1];
+    var lng    = f.geometry.coordinates[0];
+    var latlng = [lat, lng];
+    var distKm = null;
+
+    if (hasLoc) {
+      distKm = haversine(userLat, userLng, lat, lng);
+      if (distKm > radiusKm) return; // di luar radius — skip
+    }
+
+    filtered.push(f);
+    var color  = SERVICE_COLORS[p.service] || '#888780';
+    var popup  = buildPopup(p, distKm);
+    clusterGroup.addLayer(L.marker(latlng, { icon: makeIcon(color) }).bindPopup(popup));
+    plainGroup.addLayer(L.marker(latlng, { icon: makeIcon(color) }).bindPopup(popup));
+  });
+
+  // Update counter
+  if (hasLoc) {
+    document.getElementById('map-count').textContent =
+      filtered.length.toLocaleString('id-ID') + ' stasiun dalam ' + radiusKm + ' km';
+    document.getElementById('radius-count').textContent =
+      filtered.length.toLocaleString('id-ID') + ' stasiun ditemukan';
+  } else {
+    document.getElementById('map-count').textContent =
+      allFeatures.length.toLocaleString('id-ID') + ' stasiun ditampilkan';
+  }
+}
+
+// ── Fetch GeoJSON ─────────────────────────────────────────────
 function loadMarkers() {
   clusterGroup.clearLayers();
   plainGroup.clearLayers();
@@ -225,27 +339,118 @@ function loadMarkers() {
   fetch('<?= APP_BASE_URL ?>/api/geojson.php' + API_QS, { credentials: 'same-origin' })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (!data.features) return;
-      data.features.forEach(function(f) {
-        var p      = f.properties;
-        var latlng = [f.geometry.coordinates[1], f.geometry.coordinates[0]];
-        var color  = SERVICE_COLORS[p.service] || '#888780';
-        var popup  = '<strong>' + (p.stn || p.name || '—') + '</strong>'
-          + '<div class="pop-meta">' + (p.service || '') + (p.freq ? ' · ' + p.freq.toLocaleString('id-ID') + ' MHz' : '') + '</div>'
-          + '<div class="pop-meta">' + [p.district, p.city].filter(Boolean).join(', ') + '</div>'
-          + (p.lic ? '<div class="pop-meta" style="font-family:monospace;font-size:10px">' + p.lic + '</div>' : '')
-          + '<div style="margin-top:6px"><a href="<?= APP_BASE_URL ?>/detail.php?id=' + p.id + '" style="color:var(--blue);font-size:12px">Lihat detail →</a></div>';
-        clusterGroup.addLayer(L.marker(latlng, { icon: makeIcon(color) }).bindPopup(popup));
-        plainGroup.addLayer(L.marker(latlng, { icon: makeIcon(color) }).bindPopup(popup));
-      });
-      document.getElementById('map-count').textContent = data.total.toLocaleString('id-ID') + ' stasiun ditampilkan';
+      allFeatures = data.features || [];
+      renderMarkers();
     })
     .catch(function() {
       document.getElementById('map-count').textContent = 'Gagal memuat data.';
     });
 }
 
-// Init sizing then load
+// ── Update marker lokasi user & lingkaran radius ──────────────
+function updateLocLayer() {
+  if (locMarker) { map.removeLayer(locMarker); locMarker = null; }
+  if (locCircle) { map.removeLayer(locCircle); locCircle = null; }
+
+  if (userLat === null) return;
+
+  locCircle = L.circle([userLat, userLng], {
+    radius: radiusKm * 1000,
+    color: '#2563EB', fillColor: '#2563EB', fillOpacity: 0.07,
+    weight: 1.5, dashArray: '5,5'
+  }).addTo(map);
+
+  locMarker = L.marker([userLat, userLng], { icon: makeUserIcon(), zIndexOffset: 1000 })
+    .addTo(map)
+    .bindPopup('<strong>Posisi Anda</strong><div class="pop-meta" style="font-family:monospace;font-size:10px">'
+      + userLat.toFixed(6) + ', ' + userLng.toFixed(6) + '</div>');
+}
+
+// ── Geolocation ───────────────────────────────────────────────
+function onLocSuccess(pos) {
+  userLat = pos.coords.latitude;
+  userLng = pos.coords.longitude;
+
+  // Tampilkan panel radius
+  var panel = document.getElementById('radius-panel');
+  panel.style.display = 'flex'; // flex-direction:column sudah di HTML
+  setMapHeight();
+  map.invalidateSize();
+
+  // Pan + zoom ke posisi user
+  map.setView([userLat, userLng], 13);
+
+  updateLocLayer();
+  renderMarkers();
+
+  // Update tombol
+  document.getElementById('btn-myloc').innerHTML =
+    '<i class="ti ti-current-location-filled"></i> Lokasi Aktif';
+  document.getElementById('btn-myloc').style.borderColor = '#2563EB';
+  document.getElementById('btn-myloc').style.color = '#2563EB';
+}
+
+function onLocError(err) {
+  var msg = {
+    1: 'Akses lokasi ditolak. Izinkan lokasi di browser.',
+    2: 'Posisi tidak dapat ditentukan.',
+    3: 'Permintaan lokasi timeout.'
+  }[err.code] || 'Gagal mendapatkan lokasi.';
+  alert(msg);
+  document.getElementById('btn-myloc').innerHTML =
+    '<i class="ti ti-current-location"></i> Lokasi Saya';
+  document.getElementById('btn-myloc').style.borderColor = '';
+  document.getElementById('btn-myloc').style.color = '';
+}
+
+document.getElementById('btn-myloc').addEventListener('click', function() {
+  if (!navigator.geolocation) { alert('Browser tidak mendukung geolocation.'); return; }
+  this.innerHTML = '<i class="ti ti-loader-2"></i> Mencari...';
+  navigator.geolocation.getCurrentPosition(onLocSuccess, onLocError, {
+    enableHighAccuracy: true, timeout: 10000, maximumAge: 30000
+  });
+});
+
+// ── Hapus lokasi ──────────────────────────────────────────────
+document.getElementById('btn-clear-loc').addEventListener('click', function() {
+  userLat = userLng = null;
+  if (locWatchId !== null) { navigator.geolocation.clearWatch(locWatchId); locWatchId = null; }
+  updateLocLayer();
+  renderMarkers();
+
+  var panel = document.getElementById('radius-panel');
+  panel.style.display = 'none';
+  setMapHeight();
+  map.invalidateSize();
+
+  document.getElementById('btn-myloc').innerHTML =
+    '<i class="ti ti-current-location"></i> Lokasi Saya';
+  document.getElementById('btn-myloc').style.borderColor = '';
+  document.getElementById('btn-myloc').style.color = '';
+});
+
+// ── Radius controls — slider ↔ input saling sync ──────────────
+var slider = document.getElementById('radius-slider');
+var numInput = document.getElementById('radius-input');
+
+function applyRadius(val) {
+  var v = parseFloat(val);
+  if (isNaN(v) || v <= 0) return;
+  radiusKm = v;
+  // Sync slider (clamp ke max-nya jika lebih besar)
+  slider.value  = Math.min(v, parseFloat(slider.max));
+  numInput.value = v;
+  updateLocLayer();
+  renderMarkers();
+}
+
+slider.addEventListener('input', function() { applyRadius(this.value); });
+numInput.addEventListener('change', function() { applyRadius(this.value); });
+numInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') applyRadius(this.value);
+});
+
+// ── Init ──────────────────────────────────────────────────────
 setMapHeight();
 window.addEventListener('resize', function() { setMapHeight(); map.invalidateSize(); });
 loadMarkers();
