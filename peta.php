@@ -12,6 +12,7 @@ $subservice = trim($_GET['subservice'] ?? '');
 $province   = trim($_GET['province']   ?? '');
 $city       = trim($_GET['city']       ?? '');
 $district   = trim($_GET['district']   ?? '');
+$freq       = trim($_GET['freq'] ?? '');
 
 // ── Dropdown options ──────────────────────────────────────────
 $services  = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
@@ -51,6 +52,7 @@ $service_colors = [
 ];
 
 // Build API query string from current filters
+$freq       = trim($_GET['freq'] ?? '');
 $api_params = array_filter([
     'q'          => $q,
     'service'    => $service,
@@ -58,7 +60,8 @@ $api_params = array_filter([
     'province'   => $province,
     'city'       => $city,
     'district'   => $district,
-]);
+    'freq'       => $freq,
+], fn($v) => $v !== '');
 $api_qs = $api_params ? '?' . http_build_query($api_params) : '';
 
 require_once __DIR__ . '/includes/header.php';
@@ -142,6 +145,15 @@ require_once __DIR__ . '/includes/header.php';
             </option>
             <?php endforeach; ?>
           </select>
+        </div>
+
+        <!-- Filter frekuensi -->
+        <div class="form-group" style="flex:0 0 auto;min-width:80px">
+          <label>Frekuensi (MHz)</label>
+          <input type="search" name="freq" id="freq-search"
+                 value="<?= htmlspecialchars($_GET['freq'] ?? '') ?>"
+                 placeholder="cth: 100.1"
+                 style="width:100%;font-size:12px;padding:5px 6px;min-height:32px;border:1px solid var(--border);border-radius:var(--radius)">
         </div>
 
         <div class="filter-actions">

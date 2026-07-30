@@ -16,6 +16,7 @@ $subservice = trim($_GET['subservice'] ?? '');
 $province   = trim($_GET['province']   ?? '');
 $city       = trim($_GET['city']       ?? '');
 $district   = trim($_GET['district']   ?? '');
+$freq       = trim($_GET['freq']       ?? '');
 
 $where  = ["sid_lat IS NOT NULL AND sid_long IS NOT NULL",
            "sid_lat BETWEEN -11 AND 6 AND sid_long BETWEEN 95 AND 141"];
@@ -31,6 +32,7 @@ if ($subservice !== '') { $where[] = "subservice = ?"; $params[] = $subservice; 
 if ($province   !== '') { $where[] = "province = ?";   $params[] = $province;   }
 if ($city       !== '') { $where[] = "city = ?";       $params[] = $city;       }
 if ($district   !== '') { $where[] = "district = ?";   $params[] = $district;   }
+if ($freq       !== '') { $where[] = "CAST(freq AS CHAR) LIKE ?"; $params[] = '%' . $freq . '%'; }
 
 $sql = "SELECT sid_lat, sid_long, service, clnt_name, stn_name,
                freq, city, district, curr_lic_num, id
