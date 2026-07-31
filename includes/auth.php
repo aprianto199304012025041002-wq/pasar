@@ -4,7 +4,11 @@ require_once __DIR__ . '/../config.php';
 function require_login() {
     if (session_status() === PHP_SESSION_NONE) session_start();
     if (empty($_SESSION['user_id'])) {
-        $login_url = SSO_URL . '?client_id=' . urlencode(SSO_CLIENT_ID);
+        // Generate state token untuk cegah login CSRF
+        $state = bin2hex(random_bytes(16));
+        $_SESSION['sso_state']    = $state;
+        $_SESSION['sso_state_ts'] = time();
+        $login_url = SSO_URL . '?client_id=' . urlencode(SSO_CLIENT_ID) . '&state=' . urlencode($state);
         header('Location: ' . $login_url);
         exit;
     }
@@ -62,6 +66,9 @@ function verify_token(string $token): array|false {
 
     // Cek expiry
     if (($payload['exp'] ?? 0) < time()) return false;
+
+    // Validasi issuer — tolak token yang bukan dari GUDEG SSO
+    if (($payload['iss'] ?? '') !== 'gudeg-sso') return false;
 
     return [
         'user_id' => $payload['sub'],
