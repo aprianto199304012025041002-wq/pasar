@@ -715,12 +715,83 @@ body {
 
 /* ── FILTER COMPACT (peta + data) ────────────────────────────── */
 .filter-compact {
-    padding: 10px 12px;
+    padding: 0;
     border-bottom: 0.5px solid var(--border);
+}
+
+/* ── Filter collapsible header ───────────────────────────── */
+.filter-toggle-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    gap: 8px;
+}
+
+.filter-toggle-bar:hover {
+    background: var(--hover);
+}
+
+.filter-toggle-label {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.filter-toggle-label .filter-active-summary {
+    font-size: 11px;
+    color: var(--blue);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.filter-toggle-chevron {
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+}
+
+.filter-compact.collapsed .filter-toggle-chevron {
+    transform: rotate(-90deg);
+}
+
+/* ── Filter body — yang bisa di-collapse ─────────────────── */
+.filter-body {
+    overflow: hidden;
+    max-height: 600px;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+    opacity: 1;
+    padding: 0 12px 10px;
+}
+
+.filter-compact.collapsed .filter-body {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (min-width: 768px) {
+    .filter-toggle-bar {
+        padding: 8px 16px;
+    }
+
+    .filter-body {
+        padding: 0 16px 10px;
+    }
 }
 
 .filter-search-row {
     margin-bottom: 8px;
+    padding-top: 2px;
 }
 
     .filter-search-row .search-wrap {
@@ -776,10 +847,6 @@ body {
         }
 
 @media (min-width: 768px) {
-    .filter-compact {
-        padding: 10px 16px;
-    }
-
     .filter-dropdowns-row .form-group {
         flex: 1 1 130px;
     }
@@ -1726,3 +1793,4 @@ tbody tr:hover {
         grid-template-rows: auto;
     }
 }
+
