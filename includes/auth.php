@@ -1,8 +1,21 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
+function _session_start(): void {
+    if (session_status() !== PHP_SESSION_NONE) return;
+    // Pastikan cookie params konsisten di semua titik session_start()
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
+
 function require_login() {
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    _session_start();
     if (empty($_SESSION['user_id'])) {
         // Generate state token untuk cegah login CSRF
         $state = bin2hex(random_bytes(16));
@@ -15,7 +28,7 @@ function require_login() {
 }
 
 function get_user(): array {
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    _session_start();
     return [
         'id'    => $_SESSION['user_id']  ?? '',
         'name'  => $_SESSION['name']     ?? 'Pengguna',
@@ -25,7 +38,7 @@ function get_user(): array {
 }
 
 function is_logged_in(): bool {
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    _session_start();
     return !empty($_SESSION['user_id']);
 }
 
