@@ -169,7 +169,7 @@ var map = L.map('minimap').setView([lat, lng], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   { attribution: '© OpenStreetMap' }).addTo(map);
 L.marker([lat, lng]).addTo(map)
-  .bindPopup('<strong><?= addslashes(htmlspecialchars($d['stn_name'] ?: $d['clnt_name'])) ?></strong><br><?= addslashes(htmlspecialchars($d['service'])) ?>').openPopup();
+  .bindPopup('<strong>' + <?= json_encode(htmlspecialchars($d['stn_name'] ?: $d['clnt_name'])) ?> + '</strong><br>' + <?= json_encode(htmlspecialchars($d['service'] ?? '')) ?>).openPopup();
 </script>
 <?php endif; ?>
 
