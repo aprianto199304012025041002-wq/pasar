@@ -8,6 +8,6 @@
 
 </div><!-- .app-wrapper -->
 
-<script src="<?= APP_BASE_URL ?>/assets/js/app.js?v=<?= @filemtime(__DIR__ . '/../assets/js/app.js') ?>"></script>
+<script src="<?= APP_BASE_URL ?>/assets/js/app.js?v=<?= file_exists(__DIR__ . '/../assets/js/app.js') ? filemtime(__DIR__ . '/../assets/js/app.js') : '0' ?>"></script>
 </body>
 </html>
