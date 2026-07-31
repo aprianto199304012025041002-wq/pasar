@@ -216,6 +216,8 @@ var API_QS = <?= json_encode($api_qs) ?>;
 
 // ── State ─────────────────────────────────────────────────────
 var allFeatures  = [];   // semua fitur GeoJSON yang sudah di-fetch
+var geoTotal     = 0;    // total matched di DB (sebelum LIMIT)
+var geoTruncated = false; // true jika hasil melebihi GEOJSON_LIMIT
 var userLat      = null;
 var userLng      = null;
 var radiusKm     = 10;
@@ -320,13 +322,20 @@ function renderMarkers() {
   });
 
   // Update counter
+  var countEl = document.getElementById('map-count');
   if (hasLoc) {
-    document.getElementById('map-count').textContent =
+    countEl.textContent =
       filtered.length.toLocaleString('id-ID') + ' stasiun dalam ' + radiusKm + ' km';
     document.getElementById('radius-count').textContent =
       filtered.length.toLocaleString('id-ID') + ' stasiun ditemukan';
+  } else if (geoTruncated) {
+    countEl.innerHTML =
+      allFeatures.length.toLocaleString('id-ID') + ' dari ' +
+      geoTotal.toLocaleString('id-ID') + ' stasiun ditampilkan &nbsp;' +
+      '<span style="color:#dc2626;font-size:11px" title="Gunakan filter untuk mempersempit hasil">' +
+      '&#9888; hasil dibatasi</span>';
   } else {
-    document.getElementById('map-count').textContent =
+    countEl.textContent =
       allFeatures.length.toLocaleString('id-ID') + ' stasiun ditampilkan';
   }
 }
@@ -340,7 +349,9 @@ function loadMarkers() {
   fetch('<?= APP_BASE_URL ?>/api/geojson.php' + API_QS, { credentials: 'same-origin' })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      allFeatures = data.features || [];
+      allFeatures  = data.features || [];
+      geoTotal     = data.total   || 0;
+      geoTruncated = data.truncated || false;
       renderMarkers();
     })
     .catch(function() {
