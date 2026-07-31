@@ -147,12 +147,43 @@ require_once __DIR__ . '/includes/header.php';
 <div class="card">
 
   <!-- Filter + Search -->
+  <?php
+  // Hitung filter aktif untuk summary di toggle bar
+  $active_filters = array_filter([$q, $service, $subservice, $province, $city, $district, $_GET['ulat'] ?? '']);
+  $filter_count   = count($active_filters);
+  $filter_summary = [];
+  if ($q !== '')          $filter_summary[] = '"' . mb_strimwidth(htmlspecialchars($q), 0, 20, '…') . '"';
+  if ($service !== '')    $filter_summary[] = htmlspecialchars($service);
+  if ($province !== '')   $filter_summary[] = htmlspecialchars($province);
+  if ($city !== '')       $filter_summary[] = htmlspecialchars($city);
+  if ($sort_dist)         $filter_summary[] = 'sortir jarak';
+  $summary_text = implode(', ', array_slice($filter_summary, 0, 2)) . (count($filter_summary) > 2 ? ', …' : '');
+  ?>
   <form method="get" action="" id="data-form">
     <!-- Field koordinat user (hidden, diisi JS) -->
     <input type="hidden" name="ulat" id="f-ulat" value="<?= htmlspecialchars($_GET['ulat'] ?? '') ?>">
     <input type="hidden" name="ulng" id="f-ulng" value="<?= htmlspecialchars($_GET['ulng'] ?? '') ?>">
 
-    <div class="filter-compact">
+    <div class="filter-compact" id="data-filter-compact">
+
+      <!-- Toggle bar -->
+      <div class="filter-toggle-bar" id="data-filter-toggle" role="button" aria-expanded="true">
+        <span class="filter-toggle-label">
+          <i class="ti ti-filter" style="font-size:13px;flex-shrink:0"></i>
+          <span>Filter &amp; Pencarian</span>
+          <?php if ($filter_count > 0): ?>
+          <span class="filter-active-summary">&mdash; <?= $summary_text ?></span>
+          <?php endif; ?>
+        </span>
+        <?php if ($filter_count > 0): ?>
+        <span style="font-size:10px;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;flex-shrink:0">
+          <?= $filter_count ?>
+        </span>
+        <?php endif; ?>
+        <i class="ti ti-chevron-down filter-toggle-chevron"></i>
+      </div>
+
+      <div class="filter-body">
 
       <!-- Baris 1: Search -->
       <div class="filter-search-row">
@@ -266,7 +297,8 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
       </div>
 
-    </div>
+      </div><!-- .filter-body -->
+    </div><!-- .filter-compact -->
   </form>
 
   <!-- Table -->
