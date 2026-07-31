@@ -800,9 +800,9 @@ body {
 
     .filter-search-row input[type=search] {
         width: 100%;
-        font-size: 12px;
+        font-size: 16px; /* min 16px cegah iOS Safari auto-zoom */
         padding: 6px 8px 6px 28px;
-        min-height: 34px;
+        min-height: 44px;
     }
 
 .filter-dropdowns-row {
@@ -828,9 +828,9 @@ body {
 
     .filter-dropdowns-row select {
         width: 100%;
-        font-size: 12px;
+        font-size: 16px; /* min 16px cegah iOS Safari auto-zoom */
         padding: 5px 7px;
-        min-height: 32px;
+        min-height: 44px;
     }
 
     .filter-dropdowns-row .filter-actions {
@@ -926,10 +926,10 @@ body {
 
 input[type=text], input[type=search], select {
     padding: 7px 10px;
-    min-height: 38px;
+    min-height: 44px;
     border: 0.5px solid var(--border-md);
     border-radius: var(--radius);
-    font-size: 13px;
+    font-size: 16px; /* min 16px cegah iOS Safari auto-zoom */
     font-family: inherit;
     background: var(--surface);
     color: var(--text);
@@ -988,6 +988,19 @@ input[type=text], input[type=search], select {
 .table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Sembunyikan kolom non-esensial di layar kecil */
+@media (max-width: 639px) {
+    .col-hide-sm {
+        display: none;
+    }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+    .col-hide-md {
+        display: none;
+    }
 }
 
 table {
@@ -1116,6 +1129,11 @@ tbody tr:hover {
         height: 28px;
         font-size: 12px;
     }
+}
+
+/* ── Touch optimization ────────────────────────────────────── */
+a, button, .btn, .filter-toggle-bar, [role=button] {
+    touch-action: manipulation; /* hilangkan 300ms tap delay */
 }
 
 /* ── BUTTONS ─────────────────────────────────────────────────── */
@@ -1793,4 +1811,5 @@ tbody tr:hover {
         grid-template-rows: auto;
     }
 }
+
 
