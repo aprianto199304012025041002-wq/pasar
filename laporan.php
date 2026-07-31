@@ -161,13 +161,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
                     throw new Exception('Kolom tidak cocok dengan format yang dikenal.');
                 }
                 _ensure_table($pdo, TARGET_TABLE, $headers);
-                $pdo->exec('TRUNCATE TABLE `' . TARGET_TABLE . '`');
                 $cols_escaped = array_map(fn($c) => '`' . _sanitize_col($c) . '`', $headers);
                 $placeholders = implode(', ', array_fill(0, count($headers), '?'));
                 $stmt = $pdo->prepare(
                     'INSERT INTO `' . TARGET_TABLE . '` (' . implode(', ', $cols_escaped) . ') VALUES (' . $placeholders . ')'
                 );
+                // Gunakan DELETE FROM (bukan TRUNCATE) di dalam transaction —
+                // TRUNCATE adalah DDL yang auto-commit sehingga tidak bisa di-rollback.
+                // Jika INSERT gagal di tengah, DELETE ikut di-rollback dan data lama tetap utuh.
                 $pdo->beginTransaction();
+                $pdo->exec('DELETE FROM `' . TARGET_TABLE . '`');
                 foreach ($rows as $row) {
                     $row = array_slice(array_pad($row, count($headers), null), 0, count($headers));
                     $row = array_map(fn($v) => ($v === '' ? null : $v), $row);
@@ -176,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
                 $pdo->commit();
                 $log['status']    = 'success';
                 $log['row_count'] = count($rows);
-                $log['note']      = 'TRUNCATE + INSERT ' . count($rows) . ' baris';
+                $log['note']      = 'DELETE + INSERT ' . count($rows) . ' baris';
                 $result = ['success' => true, 'message' => 'Tabel berhasil diperbarui.', 'rows' => count($rows)];
             }
         } catch (Throwable $e) {
