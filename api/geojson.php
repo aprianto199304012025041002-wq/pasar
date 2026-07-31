@@ -32,11 +32,21 @@ if ($province   !== '') { $where[] = "province = ?";   $params[] = $province;   
 if ($city       !== '') { $where[] = "city = ?";       $params[] = $city;       }
 if ($district   !== '') { $where[] = "district = ?";   $params[] = $district;   }
 
+// Hard limit — cegah respons JSON terlalu besar jika data ribuan tanpa filter
+define('GEOJSON_LIMIT', 5000);
+
+// Hitung total dulu untuk tahu apakah hasil akan terpotong
+$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM isr WHERE " . implode(' AND ', $where));
+$count_stmt->execute($params);
+$total_matched = (int) $count_stmt->fetchColumn();
+$truncated     = $total_matched > GEOJSON_LIMIT;
+
 $sql = "SELECT sid_lat, sid_long, service, clnt_name, stn_name,
                freq, city, district, curr_lic_num, id
         FROM isr
         WHERE " . implode(' AND ', $where) . "
-        ORDER BY id ASC";
+        ORDER BY id ASC
+        LIMIT " . GEOJSON_LIMIT;
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -64,7 +74,9 @@ foreach ($rows as $r) {
 }
 
 echo json_encode([
-    'type'     => 'FeatureCollection',
-    'features' => $features,
-    'total'    => count($features),
+    'type'      => 'FeatureCollection',
+    'features'  => $features,
+    'total'     => $total_matched,
+    'shown'     => count($features),
+    'truncated' => $truncated,
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
