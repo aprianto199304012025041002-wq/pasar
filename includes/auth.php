@@ -68,8 +68,10 @@ function verify_token(string $token): array|false {
         if ($valid !== 1) return false;
 
     } else {
-        // Verifikasi HMAC — pakai shared client secret
-        $expected = $b64e(hash_hmac('sha256', "$header.$body", SSO_CLIENT_SECRET, true));
+        // Verifikasi HMAC — pakai client_secret_plain (hex plaintext, konsisten dengan sso.php GUDEG)
+        // SSO_CLIENT_SECRET (bcrypt hash) hanya untuk password_verify(), bukan HMAC key
+        if (!defined('SSO_CLIENT_SECRET_PLAIN') || !SSO_CLIENT_SECRET_PLAIN) return false;
+        $expected = $b64e(hash_hmac('sha256', "$header.$body", SSO_CLIENT_SECRET_PLAIN, true));
         if (!hash_equals($expected, $sig)) return false;
     }
 
@@ -91,3 +93,4 @@ function verify_token(string $token): array|false {
         'exp'     => $payload['exp'],
     ];
 }
+
