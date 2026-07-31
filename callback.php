@@ -1,59 +1,51 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
-
-// Session params dikelola terpusat via _session_start() di auth.php
 _session_start();
 
-// Anti-replay: kalau sudah login, jangan proses token lagi
-if (!empty($_SESSION['user_id'])) {
-    header('Location: ' . APP_BASE_URL . '/dashboard.php');
-    exit;
+$debug = [];
+$debug['state_match'] = isset($_GET['state'], $_SESSION['sso_state'])
+                        && hash_equals($_SESSION['sso_state'], $_GET['state']);
+$debug['state_age']   = time() - ($_SESSION['sso_state_ts'] ?? 0);
+
+// Cek public key
+$debug['pk_defined'] = defined('SSO_PUBLIC_KEY');
+$debug['pk_length']  = defined('SSO_PUBLIC_KEY') ? strlen(SSO_PUBLIC_KEY) : 0;
+$debug['pk_head']    = defined('SSO_PUBLIC_KEY') ? substr(trim(SSO_PUBLIC_KEY), 0, 26) : 'NOT_DEF';
+$debug['pk_valid']   = false;
+if (defined('SSO_PUBLIC_KEY')) {
+    $pk = openssl_pkey_get_public(SSO_PUBLIC_KEY);
+    $debug['pk_valid'] = ($pk !== false);
+    if ($pk) {
+        $info = openssl_pkey_get_details($pk);
+        $debug['pk_bits'] = $info['bits'] ?? '?';
+    } else {
+        $debug['pk_openssl_error'] = openssl_error_string();
+    }
 }
 
+// Token info
 $token = $_GET['token'] ?? '';
-if (!$token) {
-    error_log('[PASAR] Callback: token tidak ditemukan dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=1');
-    exit;
+if ($token) {
+    $parts = explode('.', $token);
+    $b64d = fn($d) => base64_decode(strtr($d, '-_', '+/') . str_repeat('=', (4-strlen($d)%4)%4));
+    $hdr  = json_decode($b64d($parts[0] ?? ''), true);
+    $body = json_decode($b64d($parts[1] ?? ''), true);
+    $debug['alg']        = $hdr['alg'] ?? '?';
+    $debug['iss']        = $body['iss'] ?? '?';
+    $debug['exp_ok']     = isset($body['exp']) && $body['exp'] > time();
+    $debug['exp_in_sec'] = isset($body['exp']) ? ($body['exp'] - time()) : '?';
+
+    // Manual verify
+    if (defined('SSO_PUBLIC_KEY') && ($pk = openssl_pkey_get_public(SSO_PUBLIC_KEY))) {
+        $sig_raw = $b64d($parts[2] ?? '');
+        $valid   = openssl_verify($parts[0].'.'.$parts[1], $sig_raw, $pk, OPENSSL_ALGO_SHA256);
+        $debug['sig_verify'] = $valid; // 1=ok, 0=fail, -1=error
+        $debug['sig_error']  = openssl_error_string() ?: 'none';
+    }
 }
 
-// Validasi state parameter — cegah login CSRF
-$state            = $_GET['state'] ?? '';
-$session_state    = $_SESSION['sso_state'] ?? '';
-$session_state_ts = $_SESSION['sso_state_ts'] ?? 0;
-
-// Hapus state dari session terlepas dari hasilnya (one-time use)
 unset($_SESSION['sso_state'], $_SESSION['sso_state_ts']);
 
-if (!$state || !$session_state || !hash_equals($session_state, $state)) {
-    error_log('[PASAR] Callback: state tidak valid dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=3');
-    exit;
-}
-
-// State expired setelah 10 menit
-if (time() - $session_state_ts > 600) {
-    error_log('[PASAR] Callback: state expired dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=3');
-    exit;
-}
-
-$payload = verify_token($token);
-if (!$payload) {
-    error_log('[PASAR] Callback: token tidak valid dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=2');
-    exit;
-}
-
-// Regenerate session ID setelah login berhasil — cegah session fixation
-session_regenerate_id(true);
-
-$_SESSION['user_id']    = $payload['user_id'] ?? '';
-$_SESSION['name']       = $payload['name']    ?? 'Pengguna';
-$_SESSION['email']      = $payload['email']   ?? '';
-$_SESSION['role']       = $payload['role']    ?? 'user';
-$_SESSION['login_time'] = time();
-$_SESSION['ip']         = $_SERVER['REMOTE_ADDR'] ?? '';
-
-header('Location: ' . APP_BASE_URL . '/dashboard.php');
+header('Content-Type: application/json');
+echo json_encode($debug, JSON_PRETTY_PRINT);
 exit;
