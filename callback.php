@@ -1,81 +1,44 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
 
-// === DEBUG SEMENTARA — hapus setelah masalah resolved ===
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
-$_debug = [];
-$_t0 = microtime(true);
-// =========================================================
-
-// Session params dikelola terpusat via _session_start() di auth.php
 _session_start();
-$_debug[] = 'session_started: sid=' . session_id();
 
-// Anti-replay: kalau sudah login, jangan proses token lagi
-// Cegah token yang dicuri dipakai untuk hijack session yang sedang aktif
-if (!empty(\$_SESSION['user_id'])) {
-    error_log('[PASAR-DEBUG] Already logged in, redirect dashboard');
-    header('Location: ' . APP_BASE_URL . '/dashboard.php');
-    exit;
-}
-\$_debug[] = 'not_logged_in: OK';
+// === DEBUG MODE — HAPUS SETELAH SELESAI ===
+$debug = [];
+$debug['session_id']        = session_id();
+$debug['session_data']      = $_SESSION;
+$debug['get_params']        = array_keys($_GET);
+$debug['token_present']     = !empty($_GET['token']);
+$debug['token_length']      = strlen($_GET['token'] ?? '');
+$debug['state_get']         = substr($_GET['state'] ?? '', 0, 8) . '...';
+$debug['state_session']     = substr($_SESSION['sso_state'] ?? '', 0, 8) . '...';
+$debug['state_match']       = isset($_GET['state'], $_SESSION['sso_state'])
+                              && hash_equals($_SESSION['sso_state'], $_GET['state']);
+$debug['state_age_sec']     = isset($_SESSION['sso_state_ts'])
+                              ? (time() - $_SESSION['sso_state_ts']) : 'no_ts';
+$debug['SSO_PUBLIC_KEY_defined'] = defined('SSO_PUBLIC_KEY');
+$debug['SSO_PUBLIC_KEY_length']  = defined('SSO_PUBLIC_KEY') ? strlen(SSO_PUBLIC_KEY) : 0;
+$debug['SSO_PUBLIC_KEY_head']    = defined('SSO_PUBLIC_KEY') ? substr(SSO_PUBLIC_KEY, 0, 40) : 'NOT DEFINED';
 
-$token = $_GET['token'] ?? '';
-if (!\$token) {
-    error_log('[PASAR-DEBUG] No token in GET: ' . json_encode(\$_GET));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=1');
-    exit;
-}
-\$_debug[] = 'token_present: len=' . strlen(\$token);
-
-// Validasi state parameter — cegah login CSRF
-$state          = $_GET['state'] ?? '';
-$session_state  = $_SESSION['sso_state'] ?? '';
-$session_state_ts = $_SESSION['sso_state_ts'] ?? 0;
-
-// Hapus state dari session terlepas dari hasilnya (one-time use)
-unset($_SESSION['sso_state'], $_SESSION['sso_state_ts']);
-
-\$_debug[] = 'state_check: get=' . substr(\$state,0,8) . ' sess=' . substr(\$session_state,0,8);
-if (!\$state || !\$session_state || !hash_equals(\$session_state, \$state)) {
-    error_log('[PASAR-DEBUG] State mismatch: GET=' . \$state . ' SESSION=' . \$session_state);
-    header('Location: ' . APP_BASE_URL . '/login.php?err=3');
-    exit;
+// Decode token header tanpa verifikasi
+if (!empty($_GET['token'])) {
+    $parts = explode('.', $_GET['token']);
+    $hdr   = json_decode(base64_decode(strtr($parts[0] ?? '', '-_', '+/')), true);
+    $body  = json_decode(base64_decode(strtr($parts[1] ?? '', '-_', '+/')), true);
+    $debug['token_alg']   = $hdr['alg'] ?? '?';
+    $debug['token_iss']   = $body['iss'] ?? '?';
+    $debug['token_exp']   = isset($body['exp']) ? date('Y-m-d H:i:s', $body['exp']) : '?';
+    $debug['token_valid_time'] = isset($body['exp']) ? ($body['exp'] > time() ? 'OK' : 'EXPIRED') : '?';
+    $debug['token_sub']   = $body['sub'] ?? '?';
 }
 
-// State expired setelah 10 menit (cegah reuse state lama)
-if (time() - $session_state_ts > 600) {
-    error_log('[PASAR] Callback: state expired dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=3');
-    exit;
+// Coba verify token
+if (!empty($_GET['token'])) {
+    $result = verify_token($_GET['token']);
+    $debug['verify_token_result'] = $result ? 'OK: ' . $result['user_id'] : 'FAILED';
 }
 
-\$_debug[] = 'before_verify_token';
-\$payload = verify_token(\$token);
-if (!\$payload) {
-    // Debug: decode token header untuk lihat alg
-    \$parts = explode('.', \$token);
-    \$hdr = json_decode(base64_decode(strtr(\$parts[0] ?? '', '-_', '+/')), true);
-    error_log('[PASAR-DEBUG] verify_token FAILED. alg=' . (\$hdr['alg'] ?? '?') . ' SSO_PUBLIC_KEY_defined=' . (defined('SSO_PUBLIC_KEY') ? 'yes_len' . strlen(SSO_PUBLIC_KEY) : 'NO'));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=2');
-    exit;
-}
-\$_debug[] = 'verify_token: OK user=' . \$payload['user_id'];
-
-// Regenerate session ID setelah login berhasil — cegah session fixation
-\$_debug[] = 'before_regenerate';
-session_regenerate_id(true);
-\$_debug[] = 'after_regenerate: new_sid=' . session_id();
-
-$_SESSION['user_id']    = $payload['user_id'] ?? '';
-$_SESSION['name']       = $payload['name']    ?? 'Pengguna';
-$_SESSION['email']      = $payload['email']   ?? '';
-$_SESSION['role']       = $payload['role']    ?? 'user';
-$_SESSION['login_time'] = time();
-$_SESSION['ip']         = $_SERVER['REMOTE_ADDR'] ?? '';
-
-error_log('[PASAR-DEBUG] Login success: ' . json_encode(\$_debug) . ' t=' . round((microtime(true)-\$_t0)*1000) . 'ms');
-header('Location: ' . APP_BASE_URL . '/dashboard.php');
+header('Content-Type: application/json');
+echo json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 exit;
-
+// === END DEBUG ===
