@@ -114,3 +114,69 @@ function serviceBadgeClass(service) {
 function fmtNum(n) {
     return Number(n).toLocaleString('id-ID');
 }
+
+// ── Filter Collapsible ────────────────────────────────────────────────────────
+// Reusable untuk semua halaman yang punya .filter-compact + .filter-toggle-bar
+(function () {
+    var STORAGE_KEY_PREFIX = 'filter_collapsed_';
+
+    function isMobile() {
+        return window.innerWidth < 768;
+    }
+
+    function initFilterToggle(compactEl, toggleEl) {
+        if (!compactEl || !toggleEl) return;
+
+        var storageKey = STORAGE_KEY_PREFIX + (compactEl.id || 'default');
+
+        // Tentukan state awal:
+        // - Kalau ada filter aktif (badge count ada) → selalu expanded
+        // - Kalau ada state tersimpan di localStorage → pakai itu
+        // - Default: mobile = collapsed, desktop = expanded
+        var hasBadge   = !!compactEl.querySelector('[style*="background:var(--blue)"]');
+        var stored     = localStorage.getItem(storageKey);
+        var isCollapsed;
+
+        if (hasBadge) {
+            isCollapsed = false; // ada filter aktif → paksa expand
+        } else if (stored !== null) {
+            isCollapsed = stored === '1';
+        } else {
+            isCollapsed = isMobile(); // default: mobile collapsed
+        }
+
+        if (isCollapsed) {
+            compactEl.classList.add('collapsed');
+            toggleEl.setAttribute('aria-expanded', 'false');
+        }
+
+        toggleEl.addEventListener('click', function () {
+            var collapsed = compactEl.classList.toggle('collapsed');
+            toggleEl.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            localStorage.setItem(storageKey, collapsed ? '1' : '0');
+
+            // Kalau di peta, recalculate tinggi map setelah animasi selesai
+            if (typeof setMapHeight === 'function') {
+                setTimeout(function () {
+                    setMapHeight();
+                    if (typeof map !== 'undefined' && map.invalidateSize) {
+                        map.invalidateSize();
+                    }
+                }, 270); // setelah transition 0.25s selesai
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // data.php
+        initFilterToggle(
+            document.getElementById('data-filter-compact'),
+            document.getElementById('data-filter-toggle')
+        );
+        // peta.php
+        initFilterToggle(
+            document.getElementById('peta-filter-compact'),
+            document.getElementById('peta-filter-toggle')
+        );
+    });
+})();
