@@ -22,9 +22,10 @@ jobs:
           define('DB_USER',           '${{ secrets.DB_USER }}');
           define('DB_PASS',           '${{ secrets.DB_PASS }}');
           define('DB_CHARSET',        'utf8mb4');
-          define('SSO_CLIENT_ID',     '${{ secrets.SSO_CLIENT_ID }}');
-          define('SSO_CLIENT_SECRET', '${{ secrets.SSO_CLIENT_SECRET }}');
-          define('SSO_URL',           'https://gudeg.xo.je/sso.php');
+          define('SSO_CLIENT_ID',           '${{ secrets.SSO_CLIENT_ID }}');
+          define('SSO_CLIENT_SECRET',       '${{ secrets.SSO_CLIENT_SECRET }}');
+          define('SSO_CLIENT_SECRET_PLAIN', '${{ secrets.SSO_CLIENT_SECRET_PLAIN }}');
+          define('SSO_URL',                 'https://gudeg.xo.je/sso.php');
           define('SSO_VERIFY_URL',    'https://gudeg.xo.je/verify.php');
           define('SSO_CALLBACK_URL',  'https://pasar.balmonjogja.info/callback.php');
           define('APP_NAME',          'pasar');
