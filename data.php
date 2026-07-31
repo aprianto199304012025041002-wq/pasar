@@ -288,7 +288,7 @@ require_once __DIR__ . '/includes/header.php';
         <?php if ($sort_dist): ?>
         <span style="font-size:11px;color:#2563EB;flex-shrink:0">
           <i class="ti ti-map-pin" style="font-size:10px"></i>
-          <?= number_format($user_lat, 6) ?>, <?= number_format($user_lng, 6) ?>
+          <?= sprintf('%.6f', $user_lat) ?>, <?= sprintf('%.6f', $user_lng) ?>
         </span>
         <a href="<?= htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?') . '?' . http_build_query(array_diff_key($_GET, ['ulat'=>1,'ulng'=>1,'page'=>1]))) ?>"
            style="font-size:11px;color:#dc2626;text-decoration:none;flex-shrink:0">
@@ -454,3 +454,4 @@ document.getElementById('btn-apply-coord').addEventListener('click', function ()
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
