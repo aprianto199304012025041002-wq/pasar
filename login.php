@@ -4,7 +4,13 @@ if (is_logged_in()) {
     header('Location: ' . APP_BASE_URL . '/dashboard.php');
     exit;
 }
-$login_url = SSO_URL . '?client_id=' . urlencode(SSO_CLIENT_ID);
+// Generate state CSRF — supaya login via tombol di halaman ini
+// juga terlindungi, sama seperti require_login() di auth.php
+if (session_status() === PHP_SESSION_NONE) session_start();
+$state = bin2hex(random_bytes(16));
+$_SESSION['sso_state']    = $state;
+$_SESSION['sso_state_ts'] = time();
+$login_url = SSO_URL . '?client_id=' . urlencode(SSO_CLIENT_ID) . '&state=' . urlencode($state);
 ?>
 <!DOCTYPE html>
 <html lang="id">
