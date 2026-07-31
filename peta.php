@@ -72,8 +72,37 @@ require_once __DIR__ . '/includes/header.php';
 <div class="card" id="peta-card">
 
   <!-- Filter -->
+  <?php
+  $peta_filters = array_filter([$q, $service, $subservice, $province, $city, $district]);
+  $peta_count   = count($peta_filters);
+  $peta_summary = [];
+  if ($q !== '')        $peta_summary[] = '"' . mb_strimwidth(htmlspecialchars($q), 0, 20, '…') . '"';
+  if ($service !== '')  $peta_summary[] = htmlspecialchars($service);
+  if ($province !== '') $peta_summary[] = htmlspecialchars($province);
+  if ($city !== '')     $peta_summary[] = htmlspecialchars($city);
+  $peta_summary_text = implode(', ', array_slice($peta_summary, 0, 2)) . (count($peta_summary) > 2 ? ', …' : '');
+  ?>
   <form method="get" action="" id="peta-form">
-    <div class="filter-compact">
+    <div class="filter-compact" id="peta-filter-compact">
+
+      <!-- Toggle bar -->
+      <div class="filter-toggle-bar" id="peta-filter-toggle" role="button" aria-expanded="true">
+        <span class="filter-toggle-label">
+          <i class="ti ti-filter" style="font-size:13px;flex-shrink:0"></i>
+          <span>Filter</span>
+          <?php if ($peta_count > 0): ?>
+          <span class="filter-active-summary">&mdash; <?= $peta_summary_text ?></span>
+          <?php endif; ?>
+        </span>
+        <?php if ($peta_count > 0): ?>
+        <span style="font-size:10px;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;flex-shrink:0">
+          <?= $peta_count ?>
+        </span>
+        <?php endif; ?>
+        <i class="ti ti-chevron-down filter-toggle-chevron"></i>
+      </div>
+
+      <div class="filter-body">
 
       <div class="filter-search-row">
         <div class="search-wrap">
@@ -151,7 +180,8 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-    </div>
+      </div><!-- .filter-body -->
+    </div><!-- .filter-compact -->
   </form>
 
   <!-- Map toolbar + Legend (1 row) -->
