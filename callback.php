@@ -1,17 +1,8 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
 
-// Pastikan session belum dimulai sebelum set cookie params
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-    session_start();
-}
+// Session params dikelola terpusat via _session_start() di auth.php
+_session_start();
 
 // Anti-replay: kalau sudah login, jangan proses token lagi
 // Cegah token yang dicuri dipakai untuk hijack session yang sedang aktif
