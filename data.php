@@ -276,10 +276,10 @@ require_once __DIR__ . '/includes/header.php';
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
           <input type="number" id="inp-lat" placeholder="Latitude"
                  value="<?= htmlspecialchars($_GET['ulat'] ?? '') ?>"
-                 step="0.000001" style="width:110px;font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
+                 step="0.000001" style="width:min(110px,38vw);font-size:16px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
           <input type="number" id="inp-lng" placeholder="Longitude"
                  value="<?= htmlspecialchars($_GET['ulng'] ?? '') ?>"
-                 step="0.000001" style="width:110px;font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
+                 step="0.000001" style="width:min(110px,38vw);font-size:16px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
           <button type="button" id="btn-apply-coord" class="btn" style="font-size:11px;padding:4px 9px;flex-shrink:0">
             <i class="ti ti-check"></i> Terapkan
           </button>
@@ -315,11 +315,11 @@ require_once __DIR__ . '/includes/header.php';
           <th style="width:36px">#</th>
           <th>Nama Klien</th>
           <th>Layanan</th>
-          <th>Sub-layanan</th>
+          <th class="col-hide-sm">Sub-layanan</th>
           <th>Nama Stasiun</th>
-          <th>Frekuensi</th>
-          <th>No. Lisensi</th>
-          <th>Berlaku s/d</th>
+          <th class="col-hide-sm">Frekuensi</th>
+          <th class="col-hide-md">No. Lisensi</th>
+          <th class="col-hide-md">Berlaku s/d</th>
           <?php if ($sort_dist): ?><th><i class="ti ti-map-pin" style="font-size:12px"></i> Jarak</th><?php endif; ?>
           <th>Aksi</th>
         </tr>
@@ -335,18 +335,18 @@ require_once __DIR__ . '/includes/header.php';
             </div>
           </td>
           <td><?= svc_badge($row['service'] ?? '') ?></td>
-          <td class="td-muted"><?= htmlspecialchars($row['subservice'] ?? '-') ?></td>
+          <td class="td-muted col-hide-sm"><?= htmlspecialchars($row['subservice'] ?? '-') ?></td>
           <td style="max-width:140px">
             <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                  title="<?= htmlspecialchars($row['stn_name'] ?? '') ?>">
               <?= htmlspecialchars($row['stn_name'] ?? '-') ?>
             </div>
           </td>
-          <td class="td-mono" style="white-space:nowrap">
-            <?= $row['freq'] !== null ? number_format((float)$row['freq'], 3, ',', '.') . ' <span style="font-size:10px;color:var(--muted)">MHz</span>' : '<span class="td-muted">—</span>' ?>
+          <td class="td-mono col-hide-sm" style="white-space:nowrap">
+            <?= $row[\'freq\'] !== null ? number_format((float)$row['freq'], 3, ',', '.') . ' <span style="font-size:10px;color:var(--muted)">MHz</span>' : '<span class="td-muted">—</span>' ?>
           </td>
-          <td class="td-mono"><?= htmlspecialchars($row['curr_lic_num'] ?? '-') ?></td>
-          <td class="td-muted"><?= htmlspecialchars($row['validity_date'] ?? '-') ?></td>
+          <td class="td-mono col-hide-md"><?= htmlspecialchars($row['curr_lic_num'] ?? '-') ?></td>
+          <td class="td-muted col-hide-md"><?= htmlspecialchars($row['validity_date'] ?? '-') ?></td>
           <?php if ($sort_dist): ?>
           <td style="white-space:nowrap;font-size:12px;color:#2563EB;font-weight:500">
             <?= $row['dist_km'] !== null ? fmt_dist((float)$row['dist_km']) : '—' ?>
