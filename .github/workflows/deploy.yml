@@ -14,33 +14,40 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Buat config.local.php
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
+          SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
+          SSO_CLIENT_SECRET_PLAIN: ${{ secrets.SSO_CLIENT_SECRET_PLAIN }}
+          SSO_PUBLIC_KEY_B64: ${{ secrets.SSO_PUBLIC_KEY }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
         run: |
-          cat > config.local.php << 'PHPEOF'
+          # Decode public key dari base64
+          SSO_PUBLIC_KEY=$(echo "$SSO_PUBLIC_KEY_B64" | base64 -d)
+
+          cat > config.local.php << PHPEOF
           <?php
-          define('DB_HOST',           'localhost');
-          define('DB_NAME',           '${{ secrets.DB_NAME }}');
-          define('DB_USER',           '${{ secrets.DB_USER }}');
-          define('DB_PASS',           '${{ secrets.DB_PASS }}');
-          define('DB_CHARSET',        'utf8mb4');
-          define('SSO_CLIENT_ID',           '${{ secrets.SSO_CLIENT_ID }}');
-          define('SSO_CLIENT_SECRET',       '${{ secrets.SSO_CLIENT_SECRET }}');
-          define('SSO_CLIENT_SECRET_PLAIN', '${{ secrets.SSO_CLIENT_SECRET_PLAIN }}');
+          define('DB_HOST',                 'localhost');
+          define('DB_NAME',                 '$DB_NAME');
+          define('DB_USER',                 '$DB_USER');
+          define('DB_PASS',                 '$DB_PASS');
+          define('DB_CHARSET',              'utf8mb4');
+          define('SSO_CLIENT_ID',           '$SSO_CLIENT_ID');
+          define('SSO_CLIENT_SECRET',       '$SSO_CLIENT_SECRET');
+          define('SSO_CLIENT_SECRET_PLAIN', '$SSO_CLIENT_SECRET_PLAIN');
           define('SSO_URL',                 'https://gudeg.xo.je/sso.php');
-          define('SSO_VERIFY_URL',    'https://gudeg.xo.je/verify.php');
-          define('SSO_CALLBACK_URL',  'https://pasar.balmonjogja.info/callback.php');
-          define('APP_NAME',          'pasar');
-          define('APP_SUBTITLE',      'Balmon Kelas I Yogyakarta');
-          define('APP_BASE_URL',      'https://pasar.balmonjogja.info');
-          define('PER_PAGE',          25);
+          define('SSO_VERIFY_URL',          'https://gudeg.xo.je/verify.php');
+          define('SSO_CALLBACK_URL',        'https://pasar.balmonjogja.info/callback.php');
+          define('APP_NAME',                'pasar');
+          define('APP_SUBTITLE',            'Balmon Kelas I Yogyakarta');
+          define('APP_BASE_URL',            'https://pasar.balmonjogja.info');
+          define('PER_PAGE',                25);
+          define('SSO_PUBLIC_KEY',          <<<'PEM'
+          $SSO_PUBLIC_KEY
+          PEM);
           PHPEOF
-          python3 -c "
-import base64, sys
-key = base64.b64decode('${{ secrets.SSO_PUBLIC_KEY }}').decode()
-print(\"define('SSO_PUBLIC_KEY', <<<'PEM'\")
-print(key)
-print(\"PEM\")
-print(\");\")
-" >> config.local.php
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -59,4 +66,3 @@ print(\");\")
             **/import.php
             **/data/**
             **/.gitignore
-
