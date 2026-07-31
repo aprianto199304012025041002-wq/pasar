@@ -74,11 +74,16 @@ function _read_csv(string $path): array {
     return $rows;
 }
 
+function _sanitize_col(string $col): string {
+    // Hanya izinkan huruf, angka, underscore — cegah SQL injection via nama kolom
+    return preg_replace('/[^A-Za-z0-9_]/', '_', $col);
+}
+
 function _ensure_table(PDO $pdo, string $table, array $columns): void {
     $stmt = $pdo->query("SHOW TABLES LIKE '" . $table . "'");
     if ($stmt->rowCount() > 0) return;
     $colDefs = ['`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'];
-    foreach ($columns as $col) $colDefs[] = '`' . $col . '` TEXT';
+    foreach ($columns as $col) $colDefs[] = '`' . _sanitize_col($col) . '` TEXT';
     $pdo->exec('CREATE TABLE IF NOT EXISTS `' . $table . '` (' . implode(', ', $colDefs) . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
 }
 
@@ -131,9 +136,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
     if ($file['error'] !== UPLOAD_ERR_OK) {
         $log['note'] = 'Upload error code: ' . $file['error'];
         $result = ['success' => false, 'message' => 'Upload gagal (kode error: ' . $file['error'] . ')'];
+    } elseif ($ext === 'sql' && $me['role'] !== 'admin') {
+        $log['note'] = 'Upload SQL ditolak — bukan admin';
+        $result = ['success' => false, 'message' => 'Upload file SQL hanya diizinkan untuk admin.'];
     } elseif (!in_array($ext, ['xlsx', 'csv', 'sql'])) {
         $log['note'] = 'Format tidak didukung: ' . $ext;
-        $result = ['success' => false, 'message' => 'Format file tidak didukung. Gunakan .xlsx, .csv, atau .sql'];
+        $result = ['success' => false, 'message' => 'Format file tidak didukung. Gunakan .xlsx atau .csv'];
     } else {
         try {
             if ($ext === 'sql') {
@@ -154,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['datafile'])) {
                 }
                 _ensure_table($pdo, TARGET_TABLE, $headers);
                 $pdo->exec('TRUNCATE TABLE `' . TARGET_TABLE . '`');
-                $cols_escaped = array_map(fn($c) => '`' . $c . '`', $headers);
+                $cols_escaped = array_map(fn($c) => '`' . _sanitize_col($c) . '`', $headers);
                 $placeholders = implode(', ', array_fill(0, count($headers), '?'));
                 $stmt = $pdo->prepare(
                     'INSERT INTO `' . TARGET_TABLE . '` (' . implode(', ', $cols_escaped) . ') VALUES (' . $placeholders . ')'
@@ -274,9 +282,9 @@ require_once __DIR__ . '/includes/header.php';
       <form method="post" enctype="multipart/form-data" id="upload-form">
         <div class="form-group" style="margin-bottom:1.25rem;">
           <label for="datafile" style="display:block;margin-bottom:.4rem;font-weight:500;">File</label>
-          <input type="file" id="datafile" name="datafile" accept=".xlsx,.csv,.sql" required
+          <input type="file" id="datafile" name="datafile" accept=".xlsx,.csv<?= $me['role'] === 'admin' ? ',.sql' : '' ?>" required
                  style="display:block;width:100%;padding:.5rem .75rem;border:.5px solid var(--border-md);border-radius:var(--radius);background:var(--surface);color:inherit;font-size:.9rem;">
-          <small style="color:var(--muted);">Format: .xlsx, .csv, .sql &mdash; maks. 32 MB</small>
+          <small style="color:var(--muted);">Format: .xlsx, .csv<?= $me['role'] === 'admin' ? ', .sql' : '' ?> &mdash; maks. 32 MB</small>
         </div>
 
         <div id="upload-progress" style="display:none;margin-bottom:1.25rem;">
