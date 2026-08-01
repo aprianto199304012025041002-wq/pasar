@@ -344,7 +344,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
           </td>
           <td class="td-mono col-hide-sm" style="white-space:nowrap">
-            <?= $row[\'freq\'] !== null ? number_format((float)$row['freq'], 3, ',', '.') . ' <span style="font-size:10px;color:var(--muted)">MHz</span>' : '<span class="td-muted">—</span>' ?>
+            <?= $row['freq'] !== null ? number_format((float)$row['freq'], 3, ',', '.') . ' <span style="font-size:10px;color:var(--muted)">MHz</span>' : '<span class="td-muted">—</span>' ?>
           </td>
           <td class="td-mono col-hide-md"><?= htmlspecialchars($row['curr_lic_num'] ?? '-') ?></td>
           <td class="td-muted col-hide-md"><?= htmlspecialchars($row['validity_date'] ?? '-') ?></td>
