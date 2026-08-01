@@ -2,62 +2,63 @@
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db.php';
 require_login();
-
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-echo '<pre>';
+$q = ''; $service = ''; $subservice = ''; $province = ''; $city = ''; $district = '';
+$page_num = 1; $per_page = PER_PAGE;
+$user_lat = null; $user_lng = null; $sort_dist = false;
 
-// Test 1: koneksi DB
-try {
-    $r = $pdo->query("SELECT COUNT(*) FROM isr")->fetchColumn();
-    echo "DB OK: $r rows\n";
-} catch (Exception $e) {
-    echo "DB ERROR: " . $e->getMessage() . "\n";
+$services = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
+$provinces = $pdo->query("SELECT DISTINCT province FROM isr WHERE province IS NOT NULL ORDER BY province")->fetchAll(PDO::FETCH_COLUMN);
+$subservices = $pdo->query("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL ORDER BY subservice")->fetchAll(PDO::FETCH_COLUMN);
+$cities = $pdo->query("SELECT DISTINCT city FROM isr WHERE city IS NOT NULL ORDER BY city")->fetchAll(PDO::FETCH_COLUMN);
+$districts = $pdo->query("SELECT DISTINCT district FROM isr WHERE district IS NOT NULL ORDER BY district")->fetchAll(PDO::FETCH_COLUMN);
+
+$where = []; $params = [];
+$clause = '';
+$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM isr $clause");
+$count_stmt->execute($params);
+$total_rows = $count_stmt->fetchColumn();
+$total_pages = max(1, ceil($total_rows / $per_page));
+$offset = 0;
+
+$data_stmt = $pdo->prepare("SELECT id, clnt_name, service, subservice, curr_lic_num, stn_name, validity_date, freq, sid_lat, sid_long, NULL AS dist_km FROM isr ORDER BY clnt_name ASC LIMIT $per_page OFFSET $offset");
+$data_stmt->execute([]);
+$rows = $data_stmt->fetchAll();
+
+function svc_badge(string $svc): string {
+    return '<span class="badge">' . htmlspecialchars($svc) . '</span>';
 }
+function page_url(int $p): string { return '?page=' . $p; }
+function fmt_dist(float $km): string { return $km < 1 ? round($km*1000).' m' : number_format($km,2,',','.').' km'; }
 
-// Test 2: query dropdown (sama persis dengan data.php)
-try {
-    $services = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
-    echo "services OK: " . count($services) . "\n";
-} catch (Exception $e) {
-    echo "services ERROR: " . $e->getMessage() . "\n";
-}
+$page_title = 'Data ISR';
 
-// Test 3: query COUNT dengan clause kosong
-try {
-    $clause = '';
-    $params = [];
-    $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM isr $clause");
-    $count_stmt->execute($params);
-    echo "count OK: " . $count_stmt->fetchColumn() . "\n";
-} catch (Exception $e) {
-    echo "count ERROR: " . $e->getMessage() . "\n";
-}
+echo "CHECKPOINT 1: before header<br>";
+require_once __DIR__ . '/includes/header.php';
+echo "CHECKPOINT 2: after header<br>";
+?>
 
-// Test 4: query data (sama persis)
-try {
-    $per_page = 25;
-    $offset = 0;
-    $data_stmt = $pdo->prepare("SELECT id, clnt_name, service, subservice, curr_lic_num, stn_name, validity_date, freq, sid_lat, sid_long, NULL AS dist_km FROM isr ORDER BY clnt_name ASC LIMIT $per_page OFFSET $offset");
-    $data_stmt->execute([]);
-    $rows = $data_stmt->fetchAll();
-    echo "data OK: " . count($rows) . " rows\n";
-} catch (Exception $e) {
-    echo "data ERROR: " . $e->getMessage() . "\n";
-}
+<div class="page-title">Test Data ISR</div>
+<div class="card">
+  <?php echo "CHECKPOINT 3: in card<br>"; ?>
+  <?php
+  $active_filters = [];
+  $filter_count = 0;
+  $filter_summary = [];
+  $summary_text = '';
+  ?>
+  <?php echo "CHECKPOINT 4: after filter summary<br>"; ?>
+  <table><thead><tr><th>#</th><th>Nama</th></tr></thead><tbody>
+  <?php foreach ($rows as $i => $row): ?>
+  <tr><td><?= $i+1 ?></td><td><?= htmlspecialchars($row['clnt_name']) ?></td></tr>
+  <?php endforeach; ?>
+  </tbody></table>
+  <?php echo "CHECKPOINT 5: after table<br>"; ?>
+</div>
 
-// Test 5: require header (mungkin crash di sini)
-echo "before header include\n";
-ob_start();
-try {
-    require_once __DIR__ . '/includes/header.php';
-    $hdr = ob_get_clean();
-    echo "header OK: " . strlen($hdr) . " bytes\n";
-} catch (Exception $e) {
-    ob_end_clean();
-    echo "header ERROR: " . $e->getMessage() . "\n";
-}
-
-echo "ALL DONE\n";
-echo '</pre>';
+<?php
+echo "CHECKPOINT 6: before footer";
+require_once __DIR__ . '/includes/footer.php';
+?>
