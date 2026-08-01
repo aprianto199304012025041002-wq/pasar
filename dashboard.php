@@ -108,7 +108,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- ── Panel 1: 3 stat ───────────────────────────────────────── -->
-<div class="dash-stat3">
+<div class="stat-grid">
   <div class="stat-card">
     <div class="stat-label">Total ISR</div>
     <div class="stat-val"><?= number_format($total,0,',','.') ?></div>
@@ -124,7 +124,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- ── Panel 2: 3 geo stat ───────────────────────────────────── -->
-<div class="dash-stat3">
+<div class="stat-grid">
   <div class="stat-card">
     <div class="stat-label">Provinsi</div>
     <div class="stat-val"><?= (int)$n_prov ?></div>
@@ -140,12 +140,12 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- ── Panel 3: Wilayah expandable ───────────────────────────── -->
-<div class="card dash-section">
+<div class="card">
   <div class="card-header">
     <span class="card-title">Sebaran ISR per wilayah kerja</span>
     <span class="card-hint">klik untuk expand</span>
   </div>
-  <div class="dash-barlist">
+  <div class="bar-chart">
     <?php foreach ($by_prov as $pi => $prov):
       $wp    = $max_prov > 0 ? round($prov['cnt']/$max_prov*100) : 0;
       $pct_p = $total > 0 ? round($prov['cnt']/$total*100,1) : 0;
@@ -154,8 +154,8 @@ require_once __DIR__ . '/includes/header.php';
       $pid   = 'p'.$pi;
     ?>
     <div class="expand-row" onclick="tog('<?= $pid ?>')">
-      <div class="er-label"><i class="ti ti-chevron-right er-chev" id="ch_<?= $pid ?>"></i><?= htmlspecialchars($prov['province']) ?></div>
-      <div class="bar-track"><div class="bar-fill" style="width:<?= $wp ?>%;background:#185FA5"></div></div>
+      <div class="bar-label"><i class="ti ti-chevron-right er-chev" id="ch_<?= $pid ?>"></i><?= htmlspecialchars($prov['province']) ?></div>
+      <div class="bar-track"><div class="bar-fill" style="width:<?= $wp ?>%;background:var(--accent)"></div></div>
       <div class="er-val"><span class="er-abs"><?= number_format($prov['cnt'],0,',','.') ?></span><span class="er-pct"><?= $pct_p ?>%</span></div>
     </div>
     <div class="expand-children" id="<?= $pid ?>">
@@ -167,8 +167,8 @@ require_once __DIR__ . '/includes/header.php';
         $kid   = 'p'.$pi.'k'.$ki;
       ?>
       <div class="expand-row" onclick="tog('<?= $kid ?>');event.stopPropagation()">
-        <div class="er-label indent1"><i class="ti ti-chevron-right er-chev" id="ch_<?= $kid ?>"></i><?= htmlspecialchars($kab['city']) ?></div>
-        <div class="bar-track"><div class="bar-fill" style="width:<?= $wk ?>%;background:#7F77DD"></div></div>
+        <div class="bar-label" style="padding-left:20px"><i class="ti ti-chevron-right er-chev" id="ch_<?= $kid ?>"></i><?= htmlspecialchars($kab['city']) ?></div>
+        <div class="bar-track"><div class="bar-fill" style="width:<?= $wk ?>%;background:var(--accent3)"></div></div>
         <div class="er-val"><span class="er-abs"><?= number_format($kab['cnt'],0,',','.') ?></span><span class="er-pct"><?= $pct_k ?>%</span></div>
       </div>
       <div class="expand-children" id="<?= $kid ?>">
@@ -177,8 +177,8 @@ require_once __DIR__ . '/includes/header.php';
           $pct_kc = $total > 0 ? round($kec['cnt']/$total*100,1) : 0;
         ?>
         <div class="expand-row">
-          <div class="er-label indent2"><?= htmlspecialchars($kec['district']) ?></div>
-          <div class="bar-track"><div class="bar-fill" style="width:<?= $wkc ?>%;background:#1D9E75;opacity:.7"></div></div>
+          <div class="bar-label" style="padding-left:40px"><?= htmlspecialchars($kec['district']) ?></div>
+          <div class="bar-track"><div class="bar-fill" style="width:<?= $wkc ?>%;background:var(--green);opacity:.7"></div></div>
           <div class="er-val"><span class="er-abs"><?= number_format($kec['cnt'],0,',','.') ?></span><span class="er-pct"><?= $pct_kc ?>%</span></div>
         </div>
         <?php endforeach; ?>
@@ -190,12 +190,12 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- ── Panel 4: Service & Subservice ─────────────────────────── -->
-<div class="card dash-section">
+<div class="card">
   <div class="card-header">
     <span class="card-title">Sebaran ISR per Service dan Subservice</span>
     <span class="card-hint">klik untuk expand</span>
   </div>
-  <div class="dash-barlist">
+  <div class="bar-chart">
     <?php foreach ($by_svc as $si => $svc):
       $meta  = $svc_map[$svc['service']] ?? ['color'=>'#888780','label'=>$svc['service']];
       $ws    = $max_svc > 0 ? round($svc['cnt']/$max_svc*100) : 0;
@@ -205,7 +205,7 @@ require_once __DIR__ . '/includes/header.php';
       $sid   = 's'.$si;
     ?>
     <div class="expand-row" onclick="tog('<?= $sid ?>')">
-      <div class="er-label"><i class="ti ti-chevron-right er-chev" id="ch_<?= $sid ?>"></i><?= htmlspecialchars($meta['label']) ?></div>
+      <div class="bar-label"><i class="ti ti-chevron-right er-chev" id="ch_<?= $sid ?>"></i><?= htmlspecialchars($meta['label']) ?></div>
       <div class="bar-track"><div class="bar-fill" style="width:<?= $ws ?>%;background:<?= $meta['color'] ?>"></div></div>
       <div class="er-val"><span class="er-abs"><?= number_format($svc['cnt'],0,',','.') ?></span><span class="er-pct"><?= $pct_s ?>%</span></div>
     </div>
@@ -215,7 +215,7 @@ require_once __DIR__ . '/includes/header.php';
         $pct_b = $total > 0 ? round($sub['cnt']/$total*100,1) : 0;
       ?>
       <div class="expand-row">
-        <div class="er-label indent1"><?= htmlspecialchars($sub['subservice']) ?></div>
+        <div class="bar-label" style="padding-left:20px"><?= htmlspecialchars($sub['subservice']) ?></div>
         <div class="bar-track"><div class="bar-fill" style="width:<?= $wsb ?>%;background:<?= $meta['color'] ?>;opacity:.55"></div></div>
         <div class="er-val"><span class="er-abs"><?= number_format($sub['cnt'],0,',','.') ?></span><span class="er-pct"><?= $pct_b ?>%</span></div>
       </div>
@@ -226,7 +226,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- ── Panel 5: Semua klien ──────────────────────────────────── -->
-<div class="card dash-section">
+<div class="card">
   <div class="card-header">
     <span class="card-title">Sebaran ISR per klien</span>
     <span class="card-hint"><?= number_format($n_klien,0,',','.') ?> klien · klik untuk expand</span>
@@ -256,15 +256,15 @@ function renderClients(list) {
   list.forEach(function(cl, i) {
     var id = 'cl_' + i + '_' + cl.n.replace(/\W/g,'');
     h += '<div class="expand-row" onclick="tog(\'' + id + '\')">';
-    h += '<div class="er-label"><i class="ti ti-chevron-right er-chev" id="ch_' + id + '"></i>' + cl.n + '</div>';
-    h += '<div class="bar-track"><div class="bar-fill" style="width:' + cl.w + '%;background:#1D9E75"></div></div>';
+    h += '<div class="bar-label"><i class="ti ti-chevron-right er-chev" id="ch_' + id + '"></i>' + cl.n + '</div>';
+    h += '<div class="bar-track"><div class="bar-fill" style="width:' + cl.w + '%;background:var(--green)"></div></div>';
     h += '<div class="er-val"><span class="er-abs">' + cl.c.toLocaleString('id-ID') + '</span><span class="er-pct">' + cl.p + '%</span></div>';
     h += '</div>';
     h += '<div class="expand-children" id="' + id + '">';
     cl.subs.forEach(function(sb) {
       var wsb = cl.c > 0 ? Math.round(sb.c / cl.c * 100) : 0;
       h += '<div class="expand-row">';
-      h += '<div class="er-label indent1"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + sb.col + ';margin-right:5px;flex-shrink:0"></span>' + sb.svc + ' · ' + sb.sub + '</div>';
+      h += '<div class="bar-label" style="padding-left:20px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + sb.col + ';margin-right:5px;flex-shrink:0"></span>' + sb.svc + ' · ' + sb.sub + '</div>';
       h += '<div class="bar-track"><div class="bar-fill" style="width:' + wsb + '%;background:' + sb.col + ';opacity:.6"></div></div>';
       h += '<div class="er-val"><span class="er-abs">' + sb.c.toLocaleString('id-ID') + '</span><span class="er-pct">' + sb.p + '%</span></div>';
       h += '</div>';
