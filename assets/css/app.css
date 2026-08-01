@@ -358,13 +358,8 @@ a:hover { text-decoration: underline; }
 }
 
 @media (min-width: 1024px) {
-    .app-topbar {
-        left: var(--sidebar-w);
-    }
-    .sidebar.collapsed ~ .app-main .app-topbar,
-    .sidebar.collapsed ~ * .app-topbar {
-        left: 56px;
-    }
+    .app-topbar { left: var(--sidebar-w); }
+    .sidebar.collapsed + .app-wrapper .app-topbar { left: 56px; }
 }
 
 .topbar-hamburger {
@@ -428,14 +423,17 @@ a:hover { text-decoration: underline; }
 .app-main {
     flex: 1;
     min-width: 0;
+    width: 100%;
     margin-top: var(--topbar-h);
-    padding: 20px var(--px);
+    margin-left: 0;
+    padding: 16px var(--px);
     transition: margin-left var(--transition-slow);
 }
 
 @media (min-width: 1024px) {
     .app-main {
         margin-left: var(--sidebar-w);
+        width: calc(100% - var(--sidebar-w));
     }
 }
 
@@ -464,19 +462,25 @@ a:hover { text-decoration: underline; }
 /* ── STAT CARDS ──────────────────────────────────────────────── */
 .stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+}
+@media (min-width: 640px) {
+    .stat-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1024px) {
+    .stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 }
 
 .stat-card {
     background: var(--surface);
     border: 1px solid var(--border-md);
     border-radius: var(--radius);
-    padding: 14px 16px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     position: relative;
     overflow: hidden;
@@ -506,10 +510,13 @@ a:hover { text-decoration: underline; }
 
 .stat-val {
     font-family: var(--mono);
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--stat-color, var(--accent));
     line-height: 1;
+}
+@media (min-width: 640px) {
+    .stat-val { font-size: 22px; }
 }
 
 .stat-sub {
@@ -1359,13 +1366,12 @@ a, button, .btn, .filter-toggle-bar, [role=button] {
 /* ── DASHBOARD COMPAT ────────────────────────────────────────── */
 .dash-stat3 {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-bottom: 12px;
 }
-@media (max-width: 480px) {
-    .dash-stat3 { grid-template-columns: repeat(2, 1fr); }
-    .dash-stat3 .stat-card:last-child:nth-child(odd) { grid-column: span 2; }
+@media (min-width: 540px) {
+    .dash-stat3 { grid-template-columns: repeat(3, 1fr); }
 }
 
 .dash-section { margin-bottom: 12px; }
