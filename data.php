@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db.php';
 require_login();
@@ -154,7 +152,7 @@ require_once __DIR__ . '/includes/header.php';
   $active_filters = array_filter([$q, $service, $subservice, $province, $city, $district, $_GET['ulat'] ?? '']);
   $filter_count   = count($active_filters);
   $filter_summary = [];
-  if ($q !== '')          $filter_summary[] = '"' . mb_strimwidth(htmlspecialchars($q), 0, 20, '…') . '"';
+  if ($q !== '')          $filter_summary[] = '"' . (mb_strlen(htmlspecialchars($q)) > 20 ? mb_substr(htmlspecialchars($q), 0, 20) . '…' : htmlspecialchars($q)) . '"';
   if ($service !== '')    $filter_summary[] = htmlspecialchars($service);
   if ($province !== '')   $filter_summary[] = htmlspecialchars($province);
   if ($city !== '')       $filter_summary[] = htmlspecialchars($city);
