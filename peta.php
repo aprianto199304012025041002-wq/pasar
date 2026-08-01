@@ -204,23 +204,23 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 
   <!-- Panel radius — muncul setelah GPS didapat -->
-  <div id="radius-panel" style="display:none;flex-direction:column;gap:6px;padding:8px 12px;background:#EEF2FF;border-bottom:0.5px solid #c7d2fe">
+  <div id="radius-panel" style="display:none;flex-direction:column;gap:6px;padding:8px 12px;background:var(--accent-glow);border-bottom:1px solid var(--border-hi)">
     <!-- Baris atas: label + count + hapus -->
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <i class="ti ti-radar" style="color:#4F46E5;font-size:15px;flex-shrink:0"></i>
-      <span style="font-size:12px;color:#3730a3;font-weight:600;flex-shrink:0">Radius dari posisi saya</span>
-      <span id="radius-count" style="font-size:12px;color:#6366f1;flex:1;min-width:0"></span>
-      <button id="btn-clear-loc" class="btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:#dc2626;border-color:#fca5a5;margin-left:auto">
+      <i class="ti ti-radar" style="color:var(--accent);font-size:15px;flex-shrink:0"></i>
+      <span style="font-size:12px;color:var(--accent);font-weight:600;flex-shrink:0;font-family:var(--mono);letter-spacing:.5px">Radius dari posisi saya</span>
+      <span id="radius-count" style="font-size:12px;color:var(--muted-hi);flex:1;min-width:0"></span>
+      <button id="btn-clear-loc" class="btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--red);border-color:var(--red);margin-left:auto">
         <i class="ti ti-x"></i> Hapus
       </button>
     </div>
     <!-- Baris bawah: slider + input -->
     <div style="display:flex;align-items:center;gap:8px">
       <input type="range" id="radius-slider" min="0.5" max="100" step="0.5" value="10"
-             style="flex:1;min-width:80px;accent-color:#4F46E5">
+             style="flex:1;min-width:80px;accent-color:var(--accent)">
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <input type="number" id="radius-input" min="0.5" max="500" step="0.5" value="10"
-               style="width:64px;font-size:12px;padding:3px 6px;border:1px solid #c7d2fe;border-radius:6px;text-align:right">
+               style="width:64px;font-size:12px;padding:3px 6px;border:1px solid var(--border-hi);border-radius:var(--radius-sm);text-align:right;background:var(--surface2);color:var(--text)">
         <span style="font-size:12px;color:#6366f1;flex-shrink:0">km</span>
       </div>
     </div>
@@ -311,7 +311,7 @@ var plainGroup = L.layerGroup();
 // ── Build popup string ────────────────────────────────────────
 function buildPopup(p, distKm) {
   var distStr = (distKm !== null)
-    ? '<div class="pop-meta" style="color:#2563EB;font-weight:600">'
+    ? '<div class="pop-meta" style="color:var(--accent);font-weight:600">'
         + '<i class="ti ti-map-pin" style="font-size:10px"></i> '
         + (distKm < 1 ? (distKm * 1000).toFixed(0) + ' m' : distKm.toFixed(2) + ' km') + ' dari lokasi Anda'
       + '</div>'
@@ -398,7 +398,7 @@ function updateLocLayer() {
 
   locCircle = L.circle([userLat, userLng], {
     radius: radiusKm * 1000,
-    color: '#2563EB', fillColor: '#2563EB', fillOpacity: 0.07,
+    color: 'var(--accent)', fillColor: '#00e5ff', fillOpacity: 0.07,
     weight: 1.5, dashArray: '5,5'
   }).addTo(map);
 
@@ -517,3 +517,4 @@ if (sidebar) {
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
