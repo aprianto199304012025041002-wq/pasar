@@ -76,7 +76,7 @@ require_once __DIR__ . '/includes/header.php';
   $peta_filters = array_filter([$q, $service, $subservice, $province, $city, $district]);
   $peta_count   = count($peta_filters);
   $peta_summary = [];
-  if ($q !== '')        $peta_summary[] = '"' . mb_strimwidth(htmlspecialchars($q), 0, 20, '…') . '"';
+  if ($q !== '')        $peta_summary[] = '"' . substr(htmlspecialchars($q), 0, 20) . (strlen(htmlspecialchars($q)) > 20 ? '…' : '') . '"';
   if ($service !== '')  $peta_summary[] = htmlspecialchars($service);
   if ($province !== '') $peta_summary[] = htmlspecialchars($province);
   if ($city !== '')     $peta_summary[] = htmlspecialchars($city);
