@@ -1,9 +1,7 @@
-</main>
+  </main>
 
   <footer class="app-footer">
-    <div class="footer-inner">
-      <span>© QOS Balmon Jogja Team <?= date('Y') ?></span>
-    </div>
+    © QOS Balmon Jogja Team <?= date('Y') ?>
   </footer>
 
 </div><!-- .app-wrapper -->
