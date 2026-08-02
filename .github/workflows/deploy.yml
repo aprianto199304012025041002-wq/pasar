@@ -22,8 +22,10 @@ jobs:
           SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
           SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
           SSO_CLIENT_SECRET_PLAIN: ${{ secrets.SSO_CLIENT_SECRET_PLAIN }}
-          SSO_PUBLIC_KEY: ${{ secrets.SSO_PUBLIC_KEY }}
+          SSO_PUBLIC_KEY_B64: ${{ secrets.SSO_PUBLIC_KEY }}
         run: |
+          SSO_PUBLIC_KEY=$(echo "$SSO_PUBLIC_KEY_B64" | base64 -d)
+
           cat > config.local.php << PHPEOF
           <?php
           define('DB_HOST',                 '$DB_HOST');
@@ -49,8 +51,8 @@ jobs:
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
+          server: 153.92.10.189
+          username: u781960094.pasar.balmonjogja.info
           password: ${{ secrets.FTP_PASS }}
           port: 21
           local-dir: ./
