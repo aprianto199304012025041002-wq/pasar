@@ -57,9 +57,8 @@ jobs:
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          # Prioritas: secret (FTP_HOST/FTP_USER) jika diset, fallback ke hardcode
-          server: ${{ secrets.FTP_HOST || '153.92.10.189' }}
-          username: ${{ secrets.FTP_USER || 'u781960094.pasar.balmonjogja.info' }}
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
           port: 21
           local-dir: ./
