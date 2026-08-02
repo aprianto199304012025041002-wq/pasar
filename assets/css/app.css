@@ -1136,3 +1136,124 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
 @media (min-width: 640px) {
     .upload-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── BENTO BOX (dashboard) ───────────────────────────────────── */
+.bento-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+@media (min-width: 540px) {
+    .bento-grid {
+        grid-template-columns: 2fr 1fr 1fr;
+        grid-template-rows: auto auto;
+    }
+}
+
+.bento-card {
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 4px;
+    min-height: 90px;
+    transition: border-color var(--t), box-shadow var(--t);
+}
+.bento-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--stat-color, var(--accent));
+}
+.bento-card:hover {
+    border-color: var(--stat-color, var(--accent));
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+
+/* Large card spans 2 rows on mobile, col-span on desktop */
+.bento-lg {
+    grid-column: span 2;
+    min-height: 110px;
+}
+@media (min-width: 540px) {
+    .bento-lg {
+        grid-column: 1;
+        grid-row: span 2;
+        min-height: 160px;
+    }
+}
+
+.bento-val {
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--stat-color, var(--accent));
+    line-height: 1;
+    letter-spacing: -1px;
+}
+.bento-val.sm {
+    font-size: 22px;
+    letter-spacing: 0;
+}
+
+.bento-icon {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 22px;
+    color: var(--stat-color, var(--accent));
+    opacity: .15;
+}
+
+/* Geo card — 3 items dalam satu row */
+.bento-geo {
+    grid-column: span 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    gap: 0;
+    min-height: 70px;
+    padding: 12px 10px;
+}
+@media (min-width: 540px) {
+    .bento-geo {
+        grid-column: span 2;
+        grid-row: 1;
+    }
+}
+
+.bento-geo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+}
+.bento-geo-item .stat-label { text-align: center; }
+.bento-geo-item .bento-val { color: var(--stat-color, var(--accent)); }
+
+.bento-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--border-md);
+    flex-shrink: 0;
+}
+
+/* ── Z-INDEX FIX: sidebar harus selalu di atas peta ─────────── */
+.sidebar { z-index: 400 !important; }
+.sidebar-overlay { z-index: 399 !important; }
+.topbar { z-index: 200; }
+
+/* Leaflet controls z-index lebih rendah dari sidebar */
+.leaflet-top, .leaflet-bottom { z-index: 100 !important; }
+.leaflet-pane { z-index: 50 !important; }
+.leaflet-map-pane { z-index: 50 !important; }
