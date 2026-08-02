@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function openSidebar() {
         if (!sidebar) return;
         sidebar.classList.add('open');
-        if (overlay) overlay.classList.add('open');
+        if (overlay) overlay.classList.add('show');
         document.body.style.overflow = 'hidden';
     }
 
     function closeSidebar() {
         if (!sidebar) return;
         sidebar.classList.remove('open');
-        if (overlay) overlay.classList.remove('open');
+        if (overlay) overlay.classList.remove('show');
         document.body.style.overflow = '';
     }
 
@@ -213,3 +213,4 @@ function serviceBadgeClass(service) {
 function fmtNum(n) {
     return Number(n).toLocaleString('id-ID');
 }
+
