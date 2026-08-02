@@ -23,12 +23,12 @@ jobs:
           SSO_CLIENT_SECRET:       ${{ secrets.SSO_CLIENT_SECRET }}
           SSO_CLIENT_SECRET_PLAIN: ${{ secrets.SSO_CLIENT_SECRET_PLAIN }}
           SSO_PUBLIC_KEY_B64:      ${{ secrets.SSO_PUBLIC_KEY }}
-          SSO_URL:                 ${{ secrets.SSO_URL }}
-          SSO_VERIFY_URL:          ${{ secrets.SSO_VERIFY_URL }}
-          SSO_CALLBACK_URL:        ${{ secrets.SSO_CALLBACK_URL }}
-          APP_NAME:                ${{ secrets.APP_NAME }}
-          APP_SUBTITLE:            ${{ secrets.APP_SUBTITLE }}
-          APP_BASE_URL:            ${{ secrets.APP_BASE_URL }}
+          SSO_URL:                 'https://gudeg.xo.je/sso.php'
+          SSO_VERIFY_URL:          'https://gudeg.xo.je/verify.php'
+          SSO_CALLBACK_URL:        'https://pasar.balmonjogja.info/callback.php'
+          APP_NAME:                'pasar'
+          APP_SUBTITLE:            'Balmon Kelas I Yogyakarta'
+          APP_BASE_URL:            'https://pasar.balmonjogja.info'
         run: |
           SSO_PUBLIC_KEY=$(echo "$SSO_PUBLIC_KEY_B64" | base64 -d)
 
