@@ -15,14 +15,20 @@ jobs:
 
       - name: Buat config.local.php
         env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASS: ${{ secrets.DB_PASS }}
-          SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
-          SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
+          DB_HOST:                 ${{ secrets.DB_HOST }}
+          DB_NAME:                 ${{ secrets.DB_NAME }}
+          DB_USER:                 ${{ secrets.DB_USER }}
+          DB_PASS:                 ${{ secrets.DB_PASS }}
+          SSO_CLIENT_ID:           ${{ secrets.SSO_CLIENT_ID }}
+          SSO_CLIENT_SECRET:       ${{ secrets.SSO_CLIENT_SECRET }}
           SSO_CLIENT_SECRET_PLAIN: ${{ secrets.SSO_CLIENT_SECRET_PLAIN }}
-          SSO_PUBLIC_KEY_B64: ${{ secrets.SSO_PUBLIC_KEY }}
+          SSO_PUBLIC_KEY_B64:      ${{ secrets.SSO_PUBLIC_KEY }}
+          SSO_URL:                 ${{ secrets.SSO_URL }}
+          SSO_VERIFY_URL:          ${{ secrets.SSO_VERIFY_URL }}
+          SSO_CALLBACK_URL:        ${{ secrets.SSO_CALLBACK_URL }}
+          APP_NAME:                ${{ secrets.APP_NAME }}
+          APP_SUBTITLE:            ${{ secrets.APP_SUBTITLE }}
+          APP_BASE_URL:            ${{ secrets.APP_BASE_URL }}
         run: |
           SSO_PUBLIC_KEY=$(echo "$SSO_PUBLIC_KEY_B64" | base64 -d)
 
@@ -36,12 +42,12 @@ jobs:
           define('SSO_CLIENT_ID',           '$SSO_CLIENT_ID');
           define('SSO_CLIENT_SECRET',       '$SSO_CLIENT_SECRET');
           define('SSO_CLIENT_SECRET_PLAIN', '$SSO_CLIENT_SECRET_PLAIN');
-          define('SSO_URL',                 'https://gudeg.xo.je/sso.php');
-          define('SSO_VERIFY_URL',          'https://gudeg.xo.je/verify.php');
-          define('SSO_CALLBACK_URL',        'https://pasar.balmonjogja.info/callback.php');
-          define('APP_NAME',                'pasar');
-          define('APP_SUBTITLE',            'Balmon Kelas I Yogyakarta');
-          define('APP_BASE_URL',            'https://pasar.balmonjogja.info');
+          define('SSO_URL',                 '$SSO_URL');
+          define('SSO_VERIFY_URL',          '$SSO_VERIFY_URL');
+          define('SSO_CALLBACK_URL',        '$SSO_CALLBACK_URL');
+          define('APP_NAME',                '$APP_NAME');
+          define('APP_SUBTITLE',            '$APP_SUBTITLE');
+          define('APP_BASE_URL',            '$APP_BASE_URL');
           define('PER_PAGE',                25);
           define('SSO_PUBLIC_KEY',          <<<'PEM'
           $SSO_PUBLIC_KEY
