@@ -15,21 +15,18 @@ jobs:
 
       - name: Buat config.local.php
         env:
+          DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
           SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
           SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
           SSO_CLIENT_SECRET_PLAIN: ${{ secrets.SSO_CLIENT_SECRET_PLAIN }}
-          SSO_PUBLIC_KEY_B64: ${{ secrets.SSO_PUBLIC_KEY }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
+          SSO_PUBLIC_KEY: ${{ secrets.SSO_PUBLIC_KEY }}
         run: |
-          # Decode public key dari base64
-          SSO_PUBLIC_KEY=$(echo "$SSO_PUBLIC_KEY_B64" | base64 -d)
-
           cat > config.local.php << PHPEOF
           <?php
-          define('DB_HOST',                 'localhost');
+          define('DB_HOST',                 '$DB_HOST');
           define('DB_NAME',                 '$DB_NAME');
           define('DB_USER',                 '$DB_USER');
           define('DB_PASS',                 '$DB_PASS');
@@ -52,8 +49,8 @@ jobs:
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: 153.92.10.189
-          username: u781960094.pasar.balmonjogja.info
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
           port: 21
           local-dir: ./
