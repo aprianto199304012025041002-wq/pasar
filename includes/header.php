@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-// ── Security headers ──────────────────────────────────────────
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('X-XSS-Protection: 1; mode=block');
@@ -17,7 +16,6 @@ $nav_items = [
     'peta'      => ['label' => 'Peta',       'icon' => 'ti-map-pin'],
     'laporan'   => ['label' => 'Laporan',    'icon' => 'ti-file-analytics'],
 ];
-
 $_initials = strtoupper(substr($user['name'], 0, 2));
 $_theme    = $_COOKIE['theme'] ?? 'dark';
 ?>
@@ -38,73 +36,66 @@ $_theme    = $_COOKIE['theme'] ?? 'dark';
 <!-- Sidebar overlay (mobile) -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<!-- Sidebar -->
+<!-- Sidebar — di LUAR .app-wrapper, sama seperti struktur asli -->
 <aside class="sidebar" id="sidebar">
-
-  <!-- Logo -->
   <div class="sidebar-logo">
-    <div>
-      <div class="sidebar-logo-mark"><?= strtoupper(APP_NAME) ?></div>
-      <div class="sidebar-logo-sub">BALMON JOGJA</div>
+    <div class="logo-icon"><i class="ti ti-satellite"></i></div>
+    <div class="logo-text">
+      <div class="logo-name"><?= strtoupper(APP_NAME) ?></div>
+      <div class="logo-sub">BALMON JOGJA</div>
     </div>
   </div>
 
-  <!-- Nav -->
   <nav class="sidebar-nav">
-    <div class="nav-label">Menu</div>
+    <div class="nav-section-label">Menu</div>
     <?php foreach ($nav_items as $slug => $item): ?>
     <a href="<?= APP_BASE_URL ?>/<?= $slug ?>.php"
-       class="nav-item <?= $current === $slug ? 'active' : '' ?>"
+       class="sidebar-link <?= $current === $slug ? 'active' : '' ?>"
        title="<?= htmlspecialchars($item['label']) ?>">
       <i class="ti <?= $item['icon'] ?>"></i>
-      <span><?= $item['label'] ?></span>
+      <span class="nav-label"><?= $item['label'] ?></span>
     </a>
     <?php endforeach; ?>
   </nav>
 
-  <!-- User -->
   <div class="sidebar-user">
-    <div class="sidebar-avatar"><?= $_initials ?></div>
-    <div style="flex:1;min-width:0">
-      <div class="sidebar-user-name"><?= htmlspecialchars($user['name']) ?></div>
-      <div class="sidebar-user-role"><?= strtoupper(htmlspecialchars($user['role'])) ?></div>
+    <div class="avatar" style="flex-shrink:0"><?= $_initials ?></div>
+    <div class="sidebar-user-info">
+      <div class="user-name"><?= htmlspecialchars($user['name']) ?></div>
+      <div class="user-role"><?= strtoupper(htmlspecialchars($user['role'])) ?></div>
     </div>
-    <a href="<?= APP_BASE_URL ?>/logout.php" class="sidebar-logout" title="Logout">
+    <a href="<?= APP_BASE_URL ?>/logout.php" class="btn-logout" title="Logout" style="flex-shrink:0">
       <i class="ti ti-logout"></i>
     </a>
   </div>
 
-  <!-- Collapse btn (desktop) -->
-  <button class="sidebar-collapse-btn" id="btn-collapse" aria-label="Collapse sidebar">
+  <button class="btn-collapse" id="btn-collapse" aria-label="Collapse sidebar">
     <i class="ti ti-chevron-left" id="collapse-icon"></i>
   </button>
-
 </aside>
 
-<!-- App wrapper -->
+<!-- Main wrapper — sama struktur asli -->
 <div class="app-wrapper" id="app-wrapper">
 
-  <!-- Topbar -->
-  <header class="app-topbar">
-    <button class="topbar-hamburger" id="btn-menu" aria-label="Menu">
-      <i class="ti ti-menu-2"></i>
+  <header class="topbar">
+    <button class="btn-menu" id="btn-menu" aria-label="Menu">
+      <i class="ti ti-menu-2" id="menu-icon"></i>
     </button>
     <div class="topbar-title"><?= htmlspecialchars($page_title ?? APP_NAME) ?></div>
-    <div class="topbar-actions">
+    <div class="topbar-user">
       <!-- Theme toggle -->
-      <button class="btn" id="btn-theme" title="Ganti tema"
-              style="padding:5px 8px;min-height:32px;border-radius:var(--radius-sm)">
+      <button id="btn-theme" title="Ganti tema" class="btn-theme-toggle">
         <i class="ti <?= $_theme === 'dark' ? 'ti-sun' : 'ti-moon' ?>" id="theme-icon"></i>
       </button>
-      <!-- Avatar + menu -->
+      <!-- Avatar + dropdown -->
       <div class="avatar-wrap" id="avatar-wrap">
-        <div class="topbar-avatar" id="btn-avatar" title="<?= htmlspecialchars($user['name']) ?>">
+        <div class="avatar sm" id="btn-avatar" title="<?= htmlspecialchars($user['name']) ?>">
           <?= $_initials ?>
         </div>
         <div class="avatar-menu" id="avatar-menu">
-          <div style="padding:9px 14px 6px">
-            <div style="font-size:12px;font-weight:600"><?= htmlspecialchars($user['name']) ?></div>
-            <div style="font-size:10px;color:var(--muted);font-family:var(--mono)"><?= htmlspecialchars($user['email'] ?? '') ?></div>
+          <div class="avatar-menu-header">
+            <div class="avatar-menu-name"><?= htmlspecialchars($user['name']) ?></div>
+            <div class="avatar-menu-email"><?= htmlspecialchars($user['email'] ?? '') ?></div>
           </div>
           <div class="avatar-menu-divider"></div>
           <a href="<?= APP_BASE_URL ?>/logout.php" class="avatar-menu-item danger">
@@ -115,5 +106,4 @@ $_theme    = $_COOKIE['theme'] ?? 'dark';
     </div>
   </header>
 
-  <!-- Main content -->
   <main class="app-main">
