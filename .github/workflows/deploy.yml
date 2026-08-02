@@ -57,8 +57,8 @@ jobs:
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          # Pakai secret jika ada, fallback ke hardcoded
-          server: ${{ secrets.FTP_HOST || '153.92.10.189' }}
+          # Host dari secret, user masih ada fallback hardcoded
+          server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER || 'u781960094.pasar.balmonjogja.info' }}
           password: ${{ secrets.FTP_PASS }}
           port: 21
