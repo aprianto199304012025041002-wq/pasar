@@ -107,36 +107,48 @@ require_once __DIR__ . '/includes/header.php';
   <div class="page-sub">Ringkasan data ISR</div>
 </div>
 
-<!-- ── Panel 1: 3 stat ───────────────────────────────────────── -->
-<div class="stat-grid">
-  <div class="stat-card">
-    <div class="stat-label">Total ISR</div>
-    <div class="stat-val"><?= number_format($total,0,',','.') ?></div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-label">Total Klien</div>
-    <div class="stat-val"><?= number_format($n_klien,0,',','.') ?></div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-label">Data per Tanggal</div>
-    <div class="stat-val" style="font-size:18px"><?= htmlspecialchars($tgl_query) ?></div>
-  </div>
-</div>
+<!-- ── Bento box stats ──────────────────────────────────────── -->
+<div class="bento-grid">
 
-<!-- ── Panel 2: 3 geo stat ───────────────────────────────────── -->
-<div class="stat-grid">
-  <div class="stat-card">
-    <div class="stat-label">Provinsi</div>
-    <div class="stat-val"><?= (int)$n_prov ?></div>
+  <!-- Total ISR — large -->
+  <div class="bento-card bento-lg" style="--stat-color:var(--accent)">
+    <div class="stat-label">Total ISR</div>
+    <div class="bento-val"><?= number_format($total,0,',','.') ?></div>
+    <div class="bento-icon"><i class="ti ti-license"></i></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-label">Kab / Kota</div>
-    <div class="stat-val"><?= (int)$n_city ?></div>
+
+  <!-- Total Klien -->
+  <div class="bento-card" style="--stat-color:var(--green)">
+    <div class="stat-label">Total Klien</div>
+    <div class="bento-val sm"><?= number_format($n_klien,0,',','.') ?></div>
+    <div class="bento-icon"><i class="ti ti-building"></i></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-label">Kecamatan</div>
-    <div class="stat-val"><?= (int)$n_dist ?></div>
+
+  <!-- Tanggal -->
+  <div class="bento-card" style="--stat-color:var(--purple)">
+    <div class="stat-label">Data per</div>
+    <div class="bento-val sm" style="font-size:15px;letter-spacing:0"><?= htmlspecialchars($tgl_query) ?></div>
+    <div class="bento-icon"><i class="ti ti-calendar"></i></div>
   </div>
+
+  <!-- Geo stats — row 3 in 1 card -->
+  <div class="bento-card bento-geo">
+    <div class="bento-geo-item" style="--stat-color:var(--amber)">
+      <div class="stat-label">Provinsi</div>
+      <div class="bento-val sm"><?= (int)$n_prov ?></div>
+    </div>
+    <div class="bento-divider"></div>
+    <div class="bento-geo-item" style="--stat-color:var(--accent2)">
+      <div class="stat-label">Kab/Kota</div>
+      <div class="bento-val sm"><?= (int)$n_city ?></div>
+    </div>
+    <div class="bento-divider"></div>
+    <div class="bento-geo-item" style="--stat-color:var(--teal)">
+      <div class="stat-label">Kecamatan</div>
+      <div class="bento-val sm"><?= (int)$n_dist ?></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ── Panel 3: Wilayah expandable ───────────────────────────── -->
@@ -283,3 +295,4 @@ function filterClients() {
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
