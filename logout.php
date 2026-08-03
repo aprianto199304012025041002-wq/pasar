@@ -1,11 +1,16 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/includes/auth.php';
 
-// Hapus semua data session
+// FIX: gunakan _session_start() agar cookie params (secure, httponly, samesite)
+// konsisten dengan yang diset saat login via callback.php.
+// Sebelumnya session_start() tanpa params bisa menyebabkan cookie tidak terhapus
+// dengan benar di browser karena mismatch atribut Set-Cookie.
+_session_start();
+
 session_unset();
 session_destroy();
 
-// Hapus cookie session secara eksplisit
+// Hapus cookie session dengan params yang sama persis saat dibuat
 if (isset($_COOKIE[session_name()])) {
     setcookie(session_name(), '', [
         'expires'  => time() - 3600,
