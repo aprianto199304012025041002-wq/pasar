@@ -64,7 +64,7 @@ $_theme = $_COOKIE['theme'] ?? 'dark';
     <div class="login-logo">PASAR</div>
     <div style="font-size:10px;letter-spacing:2px;color:var(--muted-hi);
         text-transform:uppercase;margin-bottom:6px;font-family:var(--mono)">
-      Peta Stasiun Radio
+      Panduan Analisa Stasiun Radio
     </div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:28px;line-height:1.7">
       Balai Monitor Spektrum Frekuensi Radio<br>Kelas I Yogyakarta
