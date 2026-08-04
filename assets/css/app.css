@@ -577,13 +577,19 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 
 .expand-row {
     display: grid;
-    grid-template-columns: minmax(100px,1fr) 1fr auto;
+    grid-template-columns: 180px 1fr auto;
     align-items: center;
     gap: 8px;
     padding: 7px 0;
     cursor: pointer;
     border-radius: var(--radius-sm);
     transition: background var(--t);
+}
+
+@media (max-width: 480px) {
+    .expand-row {
+        grid-template-columns: 120px 1fr auto;
+    }
 }
 .expand-row:hover { background: var(--hover); padding-left: 4px; }
 
@@ -624,7 +630,7 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
     justify-content: flex-end;
     align-items: center;
 }
-.er-abs { font-family: var(--mono); font-size: 11px; color: var(--text); text-align: right; }
+.er-abs { font-family: var(--mono); font-size: 11px; color: var(--text); text-align: right; min-width: 44px; }
 .er-pct { font-family: var(--mono); font-size: 10px; color: var(--muted-hi); width: 36px; text-align: right; }
 
 /* Client search */
