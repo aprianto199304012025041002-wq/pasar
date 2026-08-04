@@ -895,22 +895,43 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
 #peta-card { display: flex; flex-direction: column; margin-bottom: 0; }
 #map { min-height: 280px; background: var(--surface2); }
 
-.map-controls {
+/* Baris kontrol dalam drawer peta: tombol + legenda */
+.peta-controls-row {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    align-items: flex-start;
+    gap: 12px;
     flex-wrap: wrap;
-    background: var(--surface);
+    padding: 4px 0 6px;
+}
+.peta-btn-group {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+.btn-sm {
+    font-size: 12px;
+    padding: 4px 10px;
+    gap: 5px;
 }
 .map-controls::-webkit-scrollbar { display: none; }
 
-.map-legend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted-hi); white-space: nowrap; }
+.map-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px 14px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--muted-hi);
+    white-space: nowrap;
+}
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* Leaflet overrides */
