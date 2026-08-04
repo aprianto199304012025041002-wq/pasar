@@ -26,7 +26,14 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebar && sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
     });
 
-    if (overlay) overlay.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', function () {
+        if (window.innerWidth >= 1024) {
+            // Desktop: collapse sidebar
+            setCollapsed(true, true);
+        } else {
+            closeSidebar();
+        }
+    });
 
     // Close on nav item click (mobile)
     if (sidebar) sidebar.querySelectorAll('.nav-item').forEach(function (el) {
@@ -47,6 +54,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!sidebar) return;
         sidebar.classList.toggle('collapsed', collapsed);
         if (save) localStorage.setItem(KEY_COL, collapsed ? '1' : '0');
+        // Desktop: sidebar overlay — tampilkan overlay saat sidebar terbuka
+        if (overlay) {
+            if (!collapsed) {
+                overlay.classList.add('show');
+            } else {
+                overlay.classList.remove('show');
+            }
+        }
         // Recalculate map after transition
         setTimeout(function () {
             if (typeof setMapHeight === 'function') setMapHeight();
