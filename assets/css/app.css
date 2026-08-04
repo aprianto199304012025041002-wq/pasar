@@ -276,7 +276,7 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
     display: none;
     position: absolute;
     right: -13px;
-    top: 22px;
+    top: 72px;
     width: 26px;
     height: 26px;
     background: var(--surface);
@@ -308,8 +308,9 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 }
 
 @media (min-width: 1024px) {
-    .app-wrapper { margin-left: var(--sidebar-w); }
-    .app-wrapper.sidebar-collapsed { margin-left: 56px; }
+    /* Konten selalu full width — sidebar overlay di atas konten */
+    .app-wrapper { margin-left: 0; }
+    .app-wrapper.sidebar-collapsed { margin-left: 0; }
 }
 
 /* ── TOPBAR ──────────────────────────────────────────────────── */
