@@ -33,7 +33,7 @@ if ($city       !== '') { $where[] = "city = ?";       $params[] = $city;       
 if ($district   !== '') { $where[] = "district = ?";   $params[] = $district;   }
 
 // Hard limit — cegah respons JSON terlalu besar jika data ribuan tanpa filter
-define('GEOJSON_LIMIT', 5000);
+define('GEOJSON_LIMIT', 15000);
 
 // Hitung total dulu untuk tahu apakah hasil akan terpotong
 $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM isr WHERE " . implode(' AND ', $where));
