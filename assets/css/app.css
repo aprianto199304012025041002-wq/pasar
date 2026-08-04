@@ -1142,22 +1142,24 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
 /* ── BENTO BOX (dashboard) ───────────────────────────────────── */
 .bento-grid {
     display: grid;
+    /* Mobile: 2 kolom */
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
     gap: 10px;
     margin-bottom: 14px;
 }
 
+/* Tablet ke atas: 4 kolom sejajar */
 @media (min-width: 540px) {
     .bento-grid {
         grid-template-columns: 2fr 1fr 1fr;
-        grid-template-rows: auto auto;
     }
 }
 
+/* Desktop: semua sejajar 4 kolom, tidak ada span baris */
 @media (min-width: 1024px) {
     .bento-grid {
-        grid-template-columns: 2fr 1fr 1fr;
+        grid-template-columns: 2fr 1fr 1fr 2fr;
+        grid-template-rows: auto;
     }
 }
 
@@ -1187,16 +1189,25 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     box-shadow: 0 4px 20px rgba(0,0,0,.3);
 }
 
-/* Large card spans 2 rows on mobile, col-span on desktop */
+/* Mobile: Total ISR full width */
 .bento-lg {
     grid-column: span 2;
     min-height: 110px;
 }
+/* Tablet: Total ISR kolom pertama, span 2 baris */
 @media (min-width: 540px) {
     .bento-lg {
         grid-column: 1;
         grid-row: span 2;
         min-height: 160px;
+    }
+}
+/* Desktop: semua 1 baris sejajar, tidak ada span baris */
+@media (min-width: 1024px) {
+    .bento-lg {
+        grid-column: 1;
+        grid-row: 1;
+        min-height: 90px;
     }
 }
 
@@ -1238,10 +1249,10 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
         grid-row: 1;
     }
 }
-
+/* Desktop: geo card di kolom ke-4, 1 baris sejajar semua */
 @media (min-width: 1024px) {
     .bento-geo {
-        grid-column: span 2;
+        grid-column: 4;
         grid-row: 1;
     }
 }
