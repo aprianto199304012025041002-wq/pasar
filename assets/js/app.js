@@ -70,7 +70,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (window.innerWidth >= 1024) {
-        setCollapsed(localStorage.getItem(KEY_COL) === '1', false);
+        // Default desktop: collapsed (hanya strip ikon 56px)
+        // Override: kalau user pernah explicitly membuka (KEY_COL === '0'), tetap buka
+        var stored = localStorage.getItem(KEY_COL);
+        var startCollapsed = stored === null ? true : (stored === '1');
+        setCollapsed(startCollapsed, false);
     }
 
     if (btnCollapse) {
