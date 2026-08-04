@@ -71,7 +71,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="card" id="peta-card">
 
-  <!-- Filter -->
+  <!-- Filter + Kontrol Peta dalam satu drawer -->
   <?php
   $peta_filters = array_filter([$q, $service, $subservice, $province, $city, $district]);
   $peta_count   = count($peta_filters);
@@ -89,11 +89,12 @@ require_once __DIR__ . '/includes/header.php';
       <div class="filter-toggle-bar" id="peta-filter-toggle" role="button" aria-expanded="true">
         <span class="filter-toggle-label">
           <i class="ti ti-filter" style="font-size:13px;flex-shrink:0"></i>
-          <span>Filter</span>
+          <span>Filter &amp; Kontrol</span>
           <?php if ($peta_count > 0): ?>
           <span class="filter-active-summary">&mdash; <?= $peta_summary_text ?></span>
           <?php endif; ?>
         </span>
+        <span id="map-count" style="font-size:11px;color:var(--muted);margin-left:auto;margin-right:4px;white-space:nowrap">Memuat...</span>
         <?php if ($peta_count > 0): ?>
         <span style="font-size:10px;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;flex-shrink:0">
           <?= $peta_count ?>
@@ -104,117 +105,122 @@ require_once __DIR__ . '/includes/header.php';
 
       <div class="filter-body">
 
-      <div class="filter-search-row">
-        <div class="search-wrap">
-          <i class="ti ti-search"></i>
-          <input type="search" name="q" value="<?= htmlspecialchars($q) ?>"
-                 placeholder="Cari nama klien, stasiun, No. ISR, atau frekuensi (MHz)...">
+        <!-- Baris pencarian -->
+        <div class="filter-search-row">
+          <div class="search-wrap">
+            <i class="ti ti-search"></i>
+            <input type="search" name="q" value="<?= htmlspecialchars($q) ?>"
+                   placeholder="Cari nama klien, stasiun, No. ISR, atau frekuensi (MHz)...">
+          </div>
         </div>
-      </div>
 
-      <div class="filter-dropdowns-row">
-        <div class="form-group">
-          <label>Layanan</label>
-          <select name="service" class="auto-submit">
-            <option value="">Semua layanan</option>
-            <?php foreach ($services as $s): ?>
-            <option value="<?= htmlspecialchars($s) ?>" <?= $service === $s ? 'selected' : '' ?>>
-              <?= htmlspecialchars($s) ?>
-            </option>
+        <!-- Baris dropdown filter -->
+        <div class="filter-dropdowns-row">
+          <div class="form-group">
+            <label>Layanan</label>
+            <select name="service" class="auto-submit">
+              <option value="">Semua layanan</option>
+              <?php foreach ($services as $s): ?>
+              <option value="<?= htmlspecialchars($s) ?>" <?= $service === $s ? 'selected' : '' ?>>
+                <?= htmlspecialchars($s) ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Sub-layanan</label>
+            <select name="subservice" class="auto-submit">
+              <option value="">Semua sub-layanan</option>
+              <?php foreach ($subservices as $ss): ?>
+              <option value="<?= htmlspecialchars($ss) ?>" <?= $subservice === $ss ? 'selected' : '' ?>>
+                <?= htmlspecialchars($ss) ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Provinsi</label>
+            <select name="province" class="auto-submit">
+              <option value="">Semua provinsi</option>
+              <?php foreach ($provinces as $pv): ?>
+              <option value="<?= htmlspecialchars($pv) ?>" <?= $province === $pv ? 'selected' : '' ?>>
+                <?= htmlspecialchars($pv) ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Kab/Kota</label>
+            <select name="city" class="auto-submit">
+              <option value="">Semua kab/kota</option>
+              <?php foreach ($cities as $c): ?>
+              <option value="<?= htmlspecialchars($c) ?>" <?= $city === $c ? 'selected' : '' ?>>
+                <?= htmlspecialchars($c) ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Kecamatan</label>
+            <select name="district" class="auto-submit">
+              <option value="">Semua kecamatan</option>
+              <?php foreach ($districts as $dt): ?>
+              <option value="<?= htmlspecialchars($dt) ?>" <?= $district === $dt ? 'selected' : '' ?>>
+                <?= htmlspecialchars($dt) ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button type="submit" class="btn btn-primary"><i class="ti ti-search"></i>Cari</button>
+            <a href="peta.php" class="btn"><i class="ti ti-x"></i>Reset</a>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="border-top:1px solid var(--border);margin:8px 0 10px"></div>
+
+        <!-- Kontrol peta: tombol + legenda dalam satu baris -->
+        <div class="peta-controls-row">
+          <!-- Tombol aksi -->
+          <div class="peta-btn-group">
+            <button type="button" id="btn-myloc" class="btn btn-sm">
+              <i class="ti ti-current-location"></i> Lokasi Saya
+            </button>
+            <button type="button" id="btn-cluster" class="btn btn-sm">
+              <i class="ti ti-layout-grid"></i> Cluster: ON
+            </button>
+          </div>
+          <!-- Legenda service -->
+          <div class="map-legend">
+            <?php foreach ($service_colors as $svc => $color): ?>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:<?= $color ?>"></div>
+              <span><?= htmlspecialchars($svc) ?></span>
+            </div>
             <?php endforeach; ?>
-          </select>
+          </div>
         </div>
-
-        <div class="form-group">
-          <label>Sub-layanan</label>
-          <select name="subservice" class="auto-submit">
-            <option value="">Semua sub-layanan</option>
-            <?php foreach ($subservices as $ss): ?>
-            <option value="<?= htmlspecialchars($ss) ?>" <?= $subservice === $ss ? 'selected' : '' ?>>
-              <?= htmlspecialchars($ss) ?>
-            </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Provinsi</label>
-          <select name="province" class="auto-submit">
-            <option value="">Semua provinsi</option>
-            <?php foreach ($provinces as $pv): ?>
-            <option value="<?= htmlspecialchars($pv) ?>" <?= $province === $pv ? 'selected' : '' ?>>
-              <?= htmlspecialchars($pv) ?>
-            </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Kab/Kota</label>
-          <select name="city" class="auto-submit">
-            <option value="">Semua kab/kota</option>
-            <?php foreach ($cities as $c): ?>
-            <option value="<?= htmlspecialchars($c) ?>" <?= $city === $c ? 'selected' : '' ?>>
-              <?= htmlspecialchars($c) ?>
-            </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Kecamatan</label>
-          <select name="district" class="auto-submit">
-            <option value="">Semua kecamatan</option>
-            <?php foreach ($districts as $dt): ?>
-            <option value="<?= htmlspecialchars($dt) ?>" <?= $district === $dt ? 'selected' : '' ?>>
-              <?= htmlspecialchars($dt) ?>
-            </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-
-        <div class="filter-actions">
-          <button type="submit" class="btn btn-primary"><i class="ti ti-search"></i>Cari</button>
-          <a href="peta.php" class="btn"><i class="ti ti-x"></i>Reset</a>
-        </div>
-      </div>
 
       </div><!-- .filter-body -->
     </div><!-- .filter-compact -->
   </form>
 
-  <!-- Map toolbar + Legend (1 row) -->
-  <div class="map-controls">
-    <div class="map-legend">
-      <?php foreach ($service_colors as $svc => $color): ?>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:<?= $color ?>"></div>
-        <span style="font-size:11px;color:var(--muted)"><?= htmlspecialchars($svc) ?></span>
-      </div>
-      <?php endforeach; ?>
-    </div>
-    <span id="map-count" style="font-size:12px;color:var(--muted);flex-shrink:0">Memuat...</span>
-    <button id="btn-myloc" class="btn" style="font-size:12px;padding:5px 10px;flex-shrink:0">
-      <i class="ti ti-current-location"></i> Lokasi Saya
-    </button>
-    <button id="btn-cluster" class="btn" style="font-size:12px;padding:5px 10px;flex-shrink:0">
-      <i class="ti ti-layout-grid"></i> Cluster: ON
-    </button>
-  </div>
-
   <!-- Panel radius — muncul setelah GPS didapat -->
   <div id="radius-panel" style="display:none;flex-direction:column;gap:6px;padding:8px 12px;background:var(--accent-glow);border-bottom:1px solid var(--border-hi)">
-    <!-- Baris atas: label + count + hapus -->
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <i class="ti ti-radar" style="color:var(--accent);font-size:15px;flex-shrink:0"></i>
       <span style="font-size:12px;color:var(--accent);font-weight:600;flex-shrink:0;font-family:var(--mono);letter-spacing:.5px">Radius dari posisi saya</span>
       <span id="radius-count" style="font-size:12px;color:var(--muted-hi);flex:1;min-width:0"></span>
-      <button id="btn-clear-loc" class="btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--red);border-color:var(--red);margin-left:auto">
+      <button id="btn-clear-loc" type="button" class="btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--red);border-color:var(--red);margin-left:auto">
         <i class="ti ti-x"></i> Hapus
       </button>
     </div>
-    <!-- Baris bawah: slider + input -->
     <div style="display:flex;align-items:center;gap:8px">
       <input type="range" id="radius-slider" min="0.5" max="100" step="0.5" value="10"
              style="flex:1;min-width:80px;accent-color:var(--accent)">
@@ -245,14 +251,14 @@ var SERVICE_COLORS = <?= json_encode($service_colors, JSON_UNESCAPED_UNICODE) ?>
 var API_QS = <?= json_encode($api_qs) ?>;
 
 // ── State ─────────────────────────────────────────────────────
-var allFeatures  = [];   // semua fitur GeoJSON yang sudah di-fetch
-var geoTotal     = 0;    // total matched di DB (sebelum LIMIT)
-var geoTruncated = false; // true jika hasil melebihi GEOJSON_LIMIT
+var allFeatures  = [];
+var geoTotal     = 0;
+var geoTruncated = false;
 var userLat      = null;
 var userLng      = null;
 var radiusKm     = 10;
-var locMarker    = null; // marker posisi user
-var locCircle    = null; // lingkaran radius
+var locMarker    = null;
+var locCircle    = null;
 var locWatchId   = null;
 
 // ── Icon helpers ──────────────────────────────────────────────
@@ -282,18 +288,17 @@ function haversine(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// ── Map sizing ────────────────────────────────────────────────
+// ── Map sizing — peta full dari bawah drawer sampai bawah viewport ──
 function setMapHeight() {
-  var card       = document.getElementById('peta-card');
-  var mapEl      = document.getElementById('map');
-  var toolbar    = card.querySelector('.map-controls');
-  var radPanel   = document.getElementById('radius-panel');
-  var form       = card.querySelector('form');
-  var cardTop    = card.getBoundingClientRect().top + window.scrollY;
-  var used       = form.offsetHeight + toolbar.offsetHeight
-                 + (radPanel.style.display !== 'none' ? radPanel.offsetHeight : 0);
-  var available  = window.innerHeight - cardTop - used - 2;
-  mapEl.style.height = Math.max(280, available) + 'px';
+  var card     = document.getElementById('peta-card');
+  var mapEl    = document.getElementById('map');
+  var form     = card.querySelector('form');
+  var radPanel = document.getElementById('radius-panel');
+  var cardTop  = card.getBoundingClientRect().top + window.scrollY;
+  var used     = form.offsetHeight
+               + (radPanel.style.display !== 'none' ? radPanel.offsetHeight : 0);
+  var available = window.innerHeight - cardTop - used - 2;
+  mapEl.style.height = Math.max(300, available) + 'px';
 }
 
 // ── Map init ──────────────────────────────────────────────────
@@ -324,7 +329,7 @@ function buildPopup(p, distKm) {
     + '<div style="margin-top:6px"><a href="<?= APP_BASE_URL ?>/detail.php?id=' + p.id + '" style="color:var(--blue);font-size:12px">Lihat detail →</a></div>';
 }
 
-// ── Render markers (dengan atau tanpa filter radius) ──────────
+// ── Render markers ────────────────────────────────────────────
 function renderMarkers() {
   clusterGroup.clearLayers();
   plainGroup.clearLayers();
@@ -341,7 +346,7 @@ function renderMarkers() {
 
     if (hasLoc) {
       distKm = haversine(userLat, userLng, lat, lng);
-      if (distKm > radiusKm) return; // di luar radius — skip
+      if (distKm > radiusKm) return;
     }
 
     filtered.push(f);
@@ -351,7 +356,6 @@ function renderMarkers() {
     plainGroup.addLayer(L.marker(latlng, { icon: makeIcon(color) }).bindPopup(popup));
   });
 
-  // Update counter
   var countEl = document.getElementById('map-count');
   if (hasLoc) {
     countEl.textContent =
@@ -361,12 +365,11 @@ function renderMarkers() {
   } else if (geoTruncated) {
     countEl.innerHTML =
       allFeatures.length.toLocaleString('id-ID') + ' dari ' +
-      geoTotal.toLocaleString('id-ID') + ' stasiun ditampilkan &nbsp;' +
-      '<span style="color:#dc2626;font-size:11px" title="Gunakan filter untuk mempersempit hasil">' +
-      '&#9888; hasil dibatasi</span>';
+      geoTotal.toLocaleString('id-ID') + ' ditampilkan &nbsp;' +
+      '<span style="color:#dc2626;font-size:11px" title="Gunakan filter untuk mempersempit hasil">&#9888; dibatasi</span>';
   } else {
     countEl.textContent =
-      allFeatures.length.toLocaleString('id-ID') + ' stasiun ditampilkan';
+      allFeatures.length.toLocaleString('id-ID') + ' stasiun';
   }
 }
 
@@ -393,15 +396,12 @@ function loadMarkers() {
 function updateLocLayer() {
   if (locMarker) { map.removeLayer(locMarker); locMarker = null; }
   if (locCircle) { map.removeLayer(locCircle); locCircle = null; }
-
   if (userLat === null) return;
-
   locCircle = L.circle([userLat, userLng], {
     radius: radiusKm * 1000,
     color: 'var(--accent)', fillColor: '#00e5ff', fillOpacity: 0.07,
     weight: 1.5, dashArray: '5,5'
   }).addTo(map);
-
   locMarker = L.marker([userLat, userLng], { icon: makeUserIcon(), zIndexOffset: 1000 })
     .addTo(map)
     .bindPopup('<strong>Posisi Anda</strong><div class="pop-meta" style="font-family:monospace;font-size:10px">'
@@ -412,24 +412,17 @@ function updateLocLayer() {
 function onLocSuccess(pos) {
   userLat = pos.coords.latitude;
   userLng = pos.coords.longitude;
-
-  // Tampilkan panel radius
   var panel = document.getElementById('radius-panel');
-  panel.style.display = 'flex'; // flex-direction:column sudah di HTML
+  panel.style.display = 'flex';
   setMapHeight();
   map.invalidateSize();
-
-  // Pan + zoom ke posisi user
   map.setView([userLat, userLng], 13);
-
   updateLocLayer();
   renderMarkers();
-
-  // Update tombol
-  document.getElementById('btn-myloc').innerHTML =
-    '<i class="ti ti-current-location-filled"></i> Lokasi Aktif';
-  document.getElementById('btn-myloc').style.borderColor = '#2563EB';
-  document.getElementById('btn-myloc').style.color = '#2563EB';
+  var btn = document.getElementById('btn-myloc');
+  btn.innerHTML = '<i class="ti ti-current-location-filled"></i> Lokasi Aktif';
+  btn.style.borderColor = '#2563EB';
+  btn.style.color = '#2563EB';
 }
 
 function onLocError(err) {
@@ -439,10 +432,10 @@ function onLocError(err) {
     3: 'Permintaan lokasi timeout.'
   }[err.code] || 'Gagal mendapatkan lokasi.';
   alert(msg);
-  document.getElementById('btn-myloc').innerHTML =
-    '<i class="ti ti-current-location"></i> Lokasi Saya';
-  document.getElementById('btn-myloc').style.borderColor = '';
-  document.getElementById('btn-myloc').style.color = '';
+  var btn = document.getElementById('btn-myloc');
+  btn.innerHTML = '<i class="ti ti-current-location"></i> Lokasi Saya';
+  btn.style.borderColor = '';
+  btn.style.color = '';
 }
 
 document.getElementById('btn-myloc').addEventListener('click', function() {
@@ -459,27 +452,24 @@ document.getElementById('btn-clear-loc').addEventListener('click', function() {
   if (locWatchId !== null) { navigator.geolocation.clearWatch(locWatchId); locWatchId = null; }
   updateLocLayer();
   renderMarkers();
-
   var panel = document.getElementById('radius-panel');
   panel.style.display = 'none';
   setMapHeight();
   map.invalidateSize();
-
-  document.getElementById('btn-myloc').innerHTML =
-    '<i class="ti ti-current-location"></i> Lokasi Saya';
-  document.getElementById('btn-myloc').style.borderColor = '';
-  document.getElementById('btn-myloc').style.color = '';
+  var btn = document.getElementById('btn-myloc');
+  btn.innerHTML = '<i class="ti ti-current-location"></i> Lokasi Saya';
+  btn.style.borderColor = '';
+  btn.style.color = '';
 });
 
-// ── Radius controls — slider ↔ input saling sync ──────────────
-var slider = document.getElementById('radius-slider');
+// ── Radius controls ───────────────────────────────────────────
+var slider   = document.getElementById('radius-slider');
 var numInput = document.getElementById('radius-input');
 
 function applyRadius(val) {
   var v = parseFloat(val);
   if (isNaN(v) || v <= 0) return;
   radiusKm = v;
-  // Sync slider (clamp ke max-nya jika lebih besar)
   slider.value  = Math.min(v, parseFloat(slider.max));
   numInput.value = v;
   updateLocLayer();
@@ -492,18 +482,18 @@ numInput.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') applyRadius(this.value);
 });
 
-// ── Init ──────────────────────────────────────────────────────
-setMapHeight();
-window.addEventListener('resize', function() { setMapHeight(); map.invalidateSize(); });
-loadMarkers();
-
-// Cluster toggle
+// ── Cluster toggle ────────────────────────────────────────────
 document.getElementById('btn-cluster').addEventListener('click', function() {
   useCluster = !useCluster;
   this.innerHTML = '<i class="ti ti-layout-grid"></i> Cluster: ' + (useCluster ? 'ON' : 'OFF');
   if (useCluster) { map.removeLayer(plainGroup); map.addLayer(clusterGroup); }
   else            { map.removeLayer(clusterGroup); map.addLayer(plainGroup); }
 });
+
+// ── Init ──────────────────────────────────────────────────────
+setMapHeight();
+window.addEventListener('resize', function() { setMapHeight(); map.invalidateSize(); });
+loadMarkers();
 
 // Fix sidebar collapse/expand
 var sidebar = document.getElementById('sidebar');
@@ -513,8 +503,15 @@ if (sidebar) {
   }).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
 }
 
+// Drawer buka/tutup juga resize peta
+var filterCompact = document.getElementById('peta-filter-compact');
+if (filterCompact) {
+  new MutationObserver(function() {
+    setTimeout(function() { setMapHeight(); map.invalidateSize(); }, 280);
+  }).observe(filterCompact, { attributes: true, attributeFilter: ['class'] });
+}
+
 })();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-
