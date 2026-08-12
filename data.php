@@ -7,12 +7,13 @@ require_login();
 $page_title = 'Data ISR';
 
 // ── Input sanitize ────────────────────────────────────────────
-$q          = trim($_GET['q']          ?? '');
-$service    = trim($_GET['service']    ?? '');
-$subservice = trim($_GET['subservice'] ?? '');
-$province   = trim($_GET['province']   ?? '');
-$city       = trim($_GET['city']       ?? '');
-$district   = trim($_GET['district']   ?? '');
+$q               = trim($_GET['q']               ?? '');
+$service         = trim($_GET['service']         ?? '');
+$subservice      = trim($_GET['subservice']      ?? '');
+$area_of_service = trim($_GET['area_of_service'] ?? '');
+$province        = trim($_GET['province']        ?? '');
+$city            = trim($_GET['city']            ?? '');
+$district        = trim($_GET['district']        ?? '');
 $page_num   = max(1, intval($_GET['page'] ?? 1));
 $per_page   = PER_PAGE;
 
@@ -22,8 +23,9 @@ $user_lng   = isset($_GET['ulng']) && is_numeric($_GET['ulng']) ? floatval($_GET
 $sort_dist  = ($user_lat !== null && $user_lng !== null);
 
 // ── Dropdown options ──────────────────────────────────────────
-$services  = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
-$provinces = $pdo->query("SELECT DISTINCT province FROM isr WHERE province IS NOT NULL ORDER BY province")->fetchAll(PDO::FETCH_COLUMN);
+$services         = $pdo->query("SELECT DISTINCT service FROM isr WHERE service IS NOT NULL ORDER BY service")->fetchAll(PDO::FETCH_COLUMN);
+$areas_of_service = $pdo->query("SELECT DISTINCT area_of_service FROM isr WHERE area_of_service IS NOT NULL ORDER BY area_of_service")->fetchAll(PDO::FETCH_COLUMN);
+$provinces        = $pdo->query("SELECT DISTINCT province FROM isr WHERE province IS NOT NULL ORDER BY province")->fetchAll(PDO::FETCH_COLUMN);
 
 if ($service !== '') {
     $ss = $pdo->prepare("SELECT DISTINCT subservice FROM isr WHERE subservice IS NOT NULL AND service = ? ORDER BY subservice");
@@ -58,11 +60,12 @@ if ($q !== '') {
     $like     = '%' . $q . '%';
     $params[] = $like; $params[] = $like; $params[] = $like; $params[] = $like;
 }
-if ($service    !== '') { $where[] = "service = ?";    $params[] = $service;    }
-if ($subservice !== '') { $where[] = "subservice = ?"; $params[] = $subservice; }
-if ($province   !== '') { $where[] = "province = ?";   $params[] = $province;   }
-if ($city       !== '') { $where[] = "city = ?";       $params[] = $city;       }
-if ($district   !== '') { $where[] = "district = ?";   $params[] = $district;   }
+if ($service         !== '') { $where[] = "service = ?";          $params[] = $service;         }
+if ($subservice      !== '') { $where[] = "subservice = ?";       $params[] = $subservice;      }
+if ($area_of_service !== '') { $where[] = "area_of_service = ?";  $params[] = $area_of_service; }
+if ($province        !== '') { $where[] = "province = ?";         $params[] = $province;        }
+if ($city            !== '') { $where[] = "city = ?";             $params[] = $city;            }
+if ($district        !== '') { $where[] = "district = ?";         $params[] = $district;        }
 
 // Kalau sort jarak, wajib ada koordinat valid
 if ($sort_dist) {
@@ -150,14 +153,15 @@ require_once __DIR__ . '/includes/header.php';
   <!-- Filter + Search -->
   <?php
   // Hitung filter aktif untuk summary di toggle bar
-  $active_filters = array_filter([$q, $service, $subservice, $province, $city, $district, $_GET['ulat'] ?? '']);
+  $active_filters = array_filter([$q, $service, $subservice, $area_of_service, $province, $city, $district, $_GET['ulat'] ?? '']);
   $filter_count   = count($active_filters);
   $filter_summary = [];
-  if ($q !== '')          $filter_summary[] = '"' . substr(htmlspecialchars($q), 0, 20) . (strlen(htmlspecialchars($q)) > 20 ? '…' : '') . '"';
-  if ($service !== '')    $filter_summary[] = htmlspecialchars($service);
-  if ($province !== '')   $filter_summary[] = htmlspecialchars($province);
-  if ($city !== '')       $filter_summary[] = htmlspecialchars($city);
-  if ($sort_dist)         $filter_summary[] = 'sortir jarak';
+  if ($q !== '')               $filter_summary[] = '"' . substr(htmlspecialchars($q), 0, 20) . (strlen(htmlspecialchars($q)) > 20 ? '…' : '') . '"';
+  if ($service !== '')         $filter_summary[] = htmlspecialchars($service);
+  if ($area_of_service !== '') $filter_summary[] = htmlspecialchars($area_of_service);
+  if ($province !== '')        $filter_summary[] = htmlspecialchars($province);
+  if ($city !== '')            $filter_summary[] = htmlspecialchars($city);
+  if ($sort_dist)              $filter_summary[] = 'sortir jarak';
   $summary_text = implode(', ', array_slice($filter_summary, 0, 2)) . (count($filter_summary) > 2 ? ', …' : '');
   ?>
   <form method="get" action="" id="data-form">
@@ -216,6 +220,18 @@ require_once __DIR__ . '/includes/header.php';
             <?php foreach ($subservices as $ss): ?>
             <option value="<?= htmlspecialchars($ss) ?>" <?= $subservice === $ss ? 'selected' : '' ?>>
               <?= htmlspecialchars($ss) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Wilayah Layanan</label>
+          <select name="area_of_service" class="auto-submit">
+            <option value="">Semua wilayah</option>
+            <?php foreach ($areas_of_service as $aos): ?>
+            <option value="<?= htmlspecialchars($aos) ?>" <?= $area_of_service === $aos ? 'selected' : '' ?>>
+              <?= htmlspecialchars($aos) ?>
             </option>
             <?php endforeach; ?>
           </select>
