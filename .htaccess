@@ -1,0 +1,45 @@
+Options -Indexes
+
+# ── Proteksi file konfigurasi sensitif ───────────────────────────────────────
+<FilesMatch "^config\.local\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ── Proteksi dot files ────────────────────────────────────────────────────────
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ── PHP settings ──────────────────────────────────────────────────────────────
+php_flag display_errors Off
+php_flag log_errors On
+php_value session.cookie_httponly 1
+php_value session.use_strict_mode 1
+php_value session.cookie_samesite Lax
+php_value session.cookie_secure 1
+
+# ── Security headers ──────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header unset X-Powered-By
+    Header unset Server
+</IfModule>
+
+# ── Error pages ───────────────────────────────────────────────────────────────
+ErrorDocument 403 /default.php
+ErrorDocument 404 /default.php
