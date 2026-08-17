@@ -40,8 +40,45 @@ if (time() - $session_state_ts > 600) {
 
 $payload = verify_token($token);
 if (!$payload) {
-    error_log('[PASAR] Callback: token tidak valid dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
-    header('Location: ' . APP_BASE_URL . '/login.php?err=2');
+    // DEBUG
+    $b64d = fn($d) => base64_decode(strtr($d, '-_', '+/') . str_repeat('=', (4 - strlen($d) % 4) % 4));
+    $parts = explode('.', $token);
+    $hdr = count($parts) >= 1 ? json_decode($b64d($parts[0]), true) : [];
+    $pld = count($parts) >= 2 ? json_decode($b64d($parts[1]), true) : [];
+    $alg = $hdr['alg'] ?? '?';
+    $exp = $pld['exp'] ?? 0;
+    $iss = $pld['iss'] ?? '?';
+    $pub_defined = defined('SSO_PUBLIC_KEY') ? 'YA' : 'TIDAK';
+    $pub_ok = 'N/A';
+    $verify_result = 'N/A';
+    $openssl_err = '';
+    if (defined('SSO_PUBLIC_KEY')) {
+        $pub = openssl_pkey_get_public(SSO_PUBLIC_KEY);
+        $pub_ok = $pub ? 'OK' : 'GAGAL';
+        if ($pub && count($parts) === 3) {
+            [$h,$b,$s] = $parts;
+            $sig = $b64d($s);
+            $verify_result = openssl_verify("$h.$b", $sig, $pub, OPENSSL_ALGO_SHA256);
+            $openssl_err = openssl_error_string() ?: '';
+        }
+    }
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "alg: $alg
+";
+    echo "iss: $iss
+";
+    echo "exp: $exp | now: " . time() . " | expired: " . ($exp < time() ? 'YA' : 'TIDAK') . "
+";
+    echo "SSO_PUBLIC_KEY defined: $pub_defined
+";
+    echo "openssl_pkey_get_public: $pub_ok
+";
+    echo "openssl_verify result: $verify_result
+";
+    echo "openssl_error: $openssl_err
+";
+    echo "key preview: " . substr(defined('SSO_PUBLIC_KEY') ? SSO_PUBLIC_KEY : '', 0, 80) . "
+";
     exit;
 }
 
