@@ -79,6 +79,20 @@ if (!$payload) {
 ";
     echo "key preview: " . substr(defined('SSO_PUBLIC_KEY') ? SSO_PUBLIC_KEY : '', 0, 80) . "
 ";
+
+    // Cek payload
+    $raw = $b64d($parts[1] ?? '');
+    echo "raw_payload: " . $raw . "
+";
+    $dec = json_decode($raw, true);
+    echo "json_error: " . json_last_error_msg() . "
+";
+    if ($dec) {
+        echo "iss: '" . ($dec['iss'] ?? 'NULL') . "' match: " . ((($dec['iss'] ?? '') === 'gudeg-sso') ? 'YA' : 'TIDAK') . "
+";
+        echo "exp ok: " . (($dec['exp'] ?? 0) >= time() ? 'YA' : 'TIDAK') . "
+";
+    }
     exit;
 }
 
