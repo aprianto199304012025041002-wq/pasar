@@ -64,7 +64,6 @@ jobs:
           security: loose
           local-dir: ./
           server-dir: /public_html/
-          state-name: ftp-deploy-sync-state.json
           exclude: |
             **/.git*
             **/.git*/**
