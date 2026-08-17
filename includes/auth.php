@@ -58,22 +58,24 @@ function verify_token(string $token): array|false {
     if ($alg === 'RS256') {
         // Verifikasi RSA — pakai public key gudeg
         $public_key_pem = defined('SSO_PUBLIC_KEY') ? SSO_PUBLIC_KEY : false;
-        if (!$public_key_pem) return false;
+        if (!$public_key_pem) { error_log('[PASAR] verify_token: SSO_PUBLIC_KEY tidak terdefinisi'); return false; }
 
         $public_key = openssl_pkey_get_public($public_key_pem);
-        if (!$public_key) return false;
+        if (!$public_key) { error_log('[PASAR] verify_token: openssl_pkey_get_public() gagal'); return false; }
 
         $signature = $b64d($sig);
         $valid = openssl_verify("$header.$body", $signature, $public_key, OPENSSL_ALGO_SHA256);
-        if ($valid !== 1) return false;
+        if ($valid !== 1) { error_log('[PASAR] verify_token: RS256 signature tidak valid, result=' . $valid); return false; }
 
     } else {
-        // Verifikasi HMAC — pakai client_secret_plain (hex plaintext, konsisten dengan sso.php GUDEG)
-        // SSO_CLIENT_SECRET (bcrypt hash) hanya untuk password_verify(), bukan HMAC key
-        if (!defined('SSO_CLIENT_SECRET_PLAIN') || !SSO_CLIENT_SECRET_PLAIN) return false;
+        // Verifikasi HMAC
+        if (!defined('SSO_CLIENT_SECRET_PLAIN') || !SSO_CLIENT_SECRET_PLAIN) { error_log('[PASAR] verify_token: SSO_CLIENT_SECRET_PLAIN tidak terdefinisi'); return false; }
         $expected = $b64e(hash_hmac('sha256', "$header.$body", SSO_CLIENT_SECRET_PLAIN, true));
-        if (!hash_equals($expected, $sig)) return false;
+        if (!hash_equals($expected, $sig)) { error_log('[PASAR] verify_token: HMAC signature tidak valid'); return false; }
     }
+
+    // Log alg untuk debug
+    error_log('[PASAR] verify_token: alg=' . $alg . ' — lanjut ke payload check');
 
     // Decode payload
     $payload = json_decode($b64d($body), true);
