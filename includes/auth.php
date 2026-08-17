@@ -9,7 +9,7 @@ function _session_start(): void {
         'path'     => '/',
         'secure'   => true,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => 'None',
     ]);
     session_start();
 }
