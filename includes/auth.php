@@ -58,10 +58,10 @@ function verify_token(string $token): array|false {
     if ($alg === 'RS256') {
         // Verifikasi RSA — pakai public key gudeg
         $public_key_pem = defined('SSO_PUBLIC_KEY') ? SSO_PUBLIC_KEY : false;
-        if (!$public_key_pem); return false;
+        if (!$public_key_pem) return false;
 
         $public_key = openssl_pkey_get_public($public_key_pem);
-        if (!$public_key); return false;
+        if (!$public_key) return false;
 
         $signature = $b64d($sig);
         $valid = openssl_verify("$header.$body", $signature, $public_key, OPENSSL_ALGO_SHA256);
@@ -69,9 +69,9 @@ function verify_token(string $token): array|false {
 
     } else {
         // Verifikasi HMAC
-        if (!defined('SSO_CLIENT_SECRET_PLAIN') || !SSO_CLIENT_SECRET_PLAIN); return false;
+        if (!defined('SSO_CLIENT_SECRET_PLAIN') || !SSO_CLIENT_SECRET_PLAIN) return false;
         $expected = $b64e(hash_hmac('sha256', "$header.$body", SSO_CLIENT_SECRET_PLAIN, true));
-        if (!hash_equals($expected, $sig)); return false;
+        if (!hash_equals($expected, $sig)) return false;
     }
 
 
