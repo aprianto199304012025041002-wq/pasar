@@ -41,30 +41,7 @@ if (time() - $session_state_ts > 600) {
 $payload = verify_token($token);
 if (!$payload) {
     error_log('[PASAR] Callback: token tidak valid dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
-
-    // DEBUG SEMENTARA — tampilkan info token di layar
-    $b64d = fn($d) => base64_decode(strtr($d, '-_', '+/') . str_repeat('=', (4 - strlen($d) % 4) % 4));
-    $parts = explode('.', $token);
-    $hdr = count($parts) >= 1 ? json_decode($b64d($parts[0]), true) : [];
-    $pld = count($parts) >= 2 ? json_decode($b64d($parts[1]), true) : [];
-    $pub_ok = defined('SSO_PUBLIC_KEY') ? (openssl_pkey_get_public(SSO_PUBLIC_KEY) ? 'OK' : 'GAGAL') : 'TIDAK DEFINED';
-    $alg = $hdr['alg'] ?? '?';
-    $exp = $pld['exp'] ?? 0;
-    $iss = $pld['iss'] ?? '?';
-    $expired = $exp < time() ? 'YA (exp='.date('H:i:s',$exp).' now='.date('H:i:s').')' : 'TIDAK';
-    header('Content-Type: text/plain; charset=utf-8');
-    echo "=== DEBUG PASAR verify_token ===
-";
-    echo "alg: $alg
-";
-    echo "iss: $iss
-";
-    echo "expired: $expired
-";
-    echo "SSO_PUBLIC_KEY: $pub_ok
-";
-    echo "SSO_CLIENT_SECRET_PLAIN defined: " . (defined('SSO_CLIENT_SECRET_PLAIN') && SSO_CLIENT_SECRET_PLAIN ? 'YA' : 'TIDAK') . "
-";
+    header('Location: ' . APP_BASE_URL . '/login.php?err=2');
     exit;
 }
 
