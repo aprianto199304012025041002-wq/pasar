@@ -5,7 +5,7 @@
 - **URL Produksi:** `https://pasar.balmonjogja.info`
 - **Hosting:** Hostinger
 - **Stack:** PHP 8+, PDO MySQL, Leaflet.js
-- **Auth:** SSO GUDEG (`gudeg.xo.je`)
+- **Auth:** SSO GUDEG (`gudeg.xo.je`) — JWT RS256, verifikasi lokal via public key
 - **Deploy:** GitHub Actions → FTP → Hostinger (push ke `main` = auto deploy)
 - **Repo:** `aprianto199304012025041002-wq/pasar`
 
@@ -107,14 +107,12 @@ PEM);
 User → login.php (generate state CSRF → redirect ke gudeg.xo.je/sso.php)
      → GUDEG login → generate JWT RS256
      → Redirect ke callback.php?token=<jwt>&state=<state>
-     → callback.php: verifikasi state, verify_token() (RS256 atau HMAC)
+     → callback.php: verifikasi state (one-time, 10 menit), verify_token() RS256
      → Isi $_SESSION[user_id, name, email, role, ip]
      → Redirect ke dashboard.php
 ```
 
-`verify_token()` di `includes/auth.php` mendukung dua mode:
-- **RS256** — verifikasi dengan `SSO_PUBLIC_KEY`
-- **HMAC** — verifikasi dengan `SSO_CLIENT_SECRET_PLAIN` (untuk kompatibilitas mundur)
+`verify_token()` di `includes/auth.php` memverifikasi token secara lokal menggunakan `SSO_PUBLIC_KEY` (RSA RS256) — tidak ada round-trip ke server GUDEG. Mode HMAC tersedia sebagai fallback kompatibilitas mundur.
 
 ---
 
@@ -154,10 +152,10 @@ Push ke `main` → GitHub Actions:
 | `DB_NAME` | Nama database |
 | `DB_USER` | Username database |
 | `DB_PASS` | Password database |
-| `SSO_CLIENT_ID` | Client ID terdaftar di GUDEG |
+| `SSO_CLIENT_ID` | Client ID terdaftar di GUDEG (`5d1a8495f13ca5d1`) |
 | `SSO_CLIENT_SECRET` | bcrypt hash secret |
 | `SSO_CLIENT_SECRET_PLAIN` | Secret plaintext |
-| `SSO_PUBLIC_KEY` | RSA public key GUDEG (base64) |
+| `SSO_PUBLIC_KEY` | RSA public key GUDEG (base64-encoded) |
 | `FTP_HOST` | Hostname FTP Hostinger |
 | `FTP_USER` | Username FTP |
 | `FTP_PASS` | Password FTP |
