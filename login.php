@@ -9,6 +9,18 @@ _session_start();
 $state = bin2hex(random_bytes(16));
 $_SESSION['sso_state']    = $state;
 $_SESSION['sso_state_ts'] = time();
+
+// Simpan state juga di cookie terpisah — fallback untuk WebView Android
+// yang tidak membawa session cookie saat cross-site redirect chain
+// (gudeg.xo.je -> pasar.balmonjogja.info/callback.php).
+// SameSite=Lax cukup karena callback adalah top-level GET redirect.
+setcookie('sso_state', $state, [
+    'expires'  => time() + 600,
+    'path'     => '/',
+    'secure'   => true,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 $login_url = SSO_URL . '?client_id=' . urlencode(SSO_CLIENT_ID) . '&state=' . urlencode($state);
 $_theme = $_COOKIE['theme'] ?? 'dark';
 ?>

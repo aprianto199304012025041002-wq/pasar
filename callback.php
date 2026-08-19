@@ -25,15 +25,30 @@ $session_state_ts = $_SESSION['sso_state_ts'] ?? 0;
 // Hapus state dari session terlepas dari hasilnya (one-time use)
 unset($_SESSION['sso_state'], $_SESSION['sso_state_ts']);
 
-if (!$state || !$session_state || !hash_equals($session_state, $state)) {
-    error_log('[PASAR] Callback: state tidak valid dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
+// Fallback: WebView Android kadang tidak membawa session cookie saat
+// cross-site redirect chain. Gunakan cookie sso_state jika session kosong.
+$cookie_state = $_COOKIE['sso_state'] ?? '';
+setcookie('sso_state', '', ['expires' => time() - 3600, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
+
+if (!$state) {
+    error_log('[PASAR] Callback: state GET param kosong dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
     header('Location: ' . APP_BASE_URL . '/login.php?err=3');
     exit;
 }
 
-// State expired setelah 10 menit
-if (time() - $session_state_ts > 600) {
-    error_log('[PASAR] Callback: state expired dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
+// Cek state: prioritaskan session, fallback ke cookie
+if ($session_state && hash_equals($session_state, $state)) {
+    // State valid via session — cek expiry
+    if (time() - $session_state_ts > 600) {
+        error_log('[PASAR] Callback: state expired (session) dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
+        header('Location: ' . APP_BASE_URL . '/login.php?err=3');
+        exit;
+    }
+} elseif ($cookie_state && hash_equals($cookie_state, $state)) {
+    // State valid via cookie fallback (WebView cross-site redirect)
+    error_log('[PASAR] Callback: state validated via cookie fallback dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
+} else {
+    error_log('[PASAR] Callback: state tidak valid dari IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-'));
     header('Location: ' . APP_BASE_URL . '/login.php?err=3');
     exit;
 }
