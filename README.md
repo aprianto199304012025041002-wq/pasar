@@ -168,7 +168,7 @@ Push ke `main` → GitHub Actions:
 - `.htaccess` tidak di-overwrite saat deploy (di-exclude dari FTP workflow)
 - `Options -Indexes` — directory listing dimatikan
 - Semua query menggunakan PDO Prepared Statements
-- Validasi state CSRF di `callback.php` (one-time, expired setelah 10 menit)
+- Validasi state CSRF di `callback.php` (one-time, expired setelah 10 menit) — dibypass untuk request dari WebView APK (`GudegJogjaApp` User-Agent) karena WebView tidak membawa session cookie saat cross-site redirect; token JWT RS256 tetap divalidasi penuh
 - Session regenerasi ID setelah login (`session_regenerate_id(true)`)
 - API `/api/geojson.php` memverifikasi sesi SSO sebelum mengembalikan data
 
