@@ -656,11 +656,11 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 .badge {
     display: inline-flex;
     align-items: center;
-    padding: 1px 6px;
-    border-radius: 20px;
+    padding: 1px 5px;
+    border-radius: 4px;
     font-size: 9px;
     font-family: var(--sans);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0;
     border: 1px solid transparent;
     white-space: nowrap;
@@ -741,7 +741,8 @@ select option { background: var(--surface); color: var(--text); }
 /* iOS zoom fix */
 @media (max-width: 767px) {
     input[type=text], input[type=search], input[type=number],
-    input[type=email], input[type=password], select { font-size: 16px; min-height: 44px; }
+    input[type=email], input[type=password] { font-size: 16px; min-height: 40px; }
+    select { font-size: 13px; min-height: 36px; }
 }
 
 /* ── FILTER COMPACT ──────────────────────────────────────────── */
@@ -787,7 +788,7 @@ select option { background: var(--surface); color: var(--text); }
 }
 .filter-compact.collapsed .filter-body { max-height: 0; opacity: 0; pointer-events: none; }
 
-.filter-search-row { margin-bottom: 6px; padding-top: 3px; }
+.filter-search-row { margin-bottom: 4px; padding-top: 2px; }
 .search-wrap { position: relative; display: flex; align-items: center; }
 .search-wrap i { position: absolute; left: 10px; color: var(--muted); font-size: 14px; pointer-events: none; }
 .search-wrap input[type=search] { padding-left: 32px; }
@@ -837,6 +838,8 @@ tbody tr:hover { background: var(--hover); }
 tbody td { padding: 6px 10px; vertical-align: middle; }
 .td-muted { color: var(--muted-hi); font-size: 11px; }
 .td-mono  { font-family: var(--mono); font-size: 11px; letter-spacing: .3px; }
+.td-file  { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.td-time  { white-space: nowrap; font-size: 11px; font-family: var(--mono); }
 
 /* Hide columns on small screens */
 @media (max-width: 639px)  { .col-hide-sm { display: none; } }
@@ -1163,8 +1166,8 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
 /* ── BENTO BOX (dashboard) ───────────────────────────────────── */
 .bento-grid {
     display: grid;
-    /* Mobile: 2 kolom */
-    grid-template-columns: 1fr 1fr;
+    /* Mobile: 3 kolom sejajar */
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 7px;
     margin-bottom: 10px;
 }
@@ -1195,7 +1198,7 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
     flex-direction: column;
     justify-content: flex-end;
     gap: 3px;
-    min-height: 70px;
+    min-height: 60px;
     transition: border-color var(--t), box-shadow var(--t);
 }
 .bento-card::before {
@@ -1212,23 +1215,23 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
 
 /* Mobile: Total ISR full width */
 .bento-lg {
-    grid-column: span 2;
-    min-height: 80px;
+    grid-column: span 3;
+    min-height: 64px;
 }
 /* Tablet: Total ISR kolom pertama, span 2 baris */
 @media (min-width: 540px) {
     .bento-lg {
-        grid-column: 1;
-        grid-row: span 2;
-        min-height: 120px;
+        grid-column: span 3;
+        grid-row: 1;
+        min-height: 64px;
     }
 }
 /* Desktop: semua 1 baris sejajar, tidak ada span baris */
 @media (min-width: 1024px) {
     .bento-lg {
-        grid-column: 1;
+        grid-column: span 3;
         grid-row: 1;
-        min-height: 70px;
+        min-height: 64px;
     }
 }
 
@@ -1256,7 +1259,7 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
 
 /* Geo card — 3 items dalam satu row */
 .bento-geo {
-    grid-column: span 2;
+    grid-column: span 3;
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
@@ -1266,15 +1269,15 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
 }
 @media (min-width: 540px) {
     .bento-geo {
-        grid-column: span 2;
-        grid-row: 1;
+        grid-column: span 3;
+        grid-row: 2;
     }
 }
 /* Desktop: geo card di kolom ke-4, 1 baris sejajar semua */
 @media (min-width: 1024px) {
     .bento-geo {
-        grid-column: 4;
-        grid-row: 1;
+        grid-column: span 3;
+        grid-row: 2;
     }
 }
 
