@@ -339,14 +339,12 @@ require_once __DIR__ . '/includes/header.php';
               <?= date('d/m/Y H:i', strtotime($l['uploaded_at'])) ?>
             </td>
             <td>
-              <div style="font-weight:500;font-size:.85rem;"><?= htmlspecialchars($l['user_name']) ?></div>
-              <div style="font-size:.78rem;color:var(--muted);"><?= htmlspecialchars($l['user_email']) ?></div>
+              <div style="font-weight:500;font-size:11px;"><?= htmlspecialchars($l['user_name']) ?></div>
+              <div style="font-size:10px;color:var(--muted);"><?= htmlspecialchars($l['user_email']) ?></div>
             </td>
-            <td style="min-width:160px;">
-              <div style="font-size:.85rem;word-break:break-word;">
-                <?= htmlspecialchars($l['file_name']) ?>
-              </div>
-              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;"><?= htmlspecialchars($l['file_type']) ?></div>
+            <td class="td-file">
+              <?= htmlspecialchars($l['file_name']) ?>
+              <div style="font-size:9px;color:var(--muted);text-transform:uppercase;"><?= htmlspecialchars($l['file_type']) ?></div>
             </td>
             <td class="td-muted" style="white-space:nowrap;"><?= _fmt_bytes((int)$l['file_size']) ?></td>
             <td style="text-align:right;font-weight:500;">
