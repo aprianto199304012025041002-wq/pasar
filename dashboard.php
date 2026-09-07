@@ -118,14 +118,14 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 
   <!-- Total Klien -->
-  <div class="bento-card" style="--stat-color:var(--green)">
+  <div class="bento-card" style="--stat-color:var(--accent)">
     <div class="stat-label">Total Klien</div>
     <div class="bento-val sm"><?= number_format($n_klien,0,',','.') ?></div>
     <div class="bento-icon"><i class="ti ti-building"></i></div>
   </div>
 
   <!-- Tanggal -->
-  <div class="bento-card" style="--stat-color:var(--purple)">
+  <div class="bento-card" style="--stat-color:var(--accent)">
     <div class="stat-label">Data per</div>
     <div class="bento-val sm" style="font-size:15px;letter-spacing:0"><?= htmlspecialchars($tgl_query) ?></div>
     <div class="bento-icon"><i class="ti ti-calendar"></i></div>
@@ -133,17 +133,17 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Geo stats — row 3 in 1 card -->
   <div class="bento-card bento-geo">
-    <div class="bento-geo-item" style="--stat-color:var(--amber)">
+    <div class="bento-geo-item" style="--stat-color:var(--accent)">
       <div class="stat-label">Provinsi</div>
       <div class="bento-val sm"><?= (int)$n_prov ?></div>
     </div>
     <div class="bento-divider"></div>
-    <div class="bento-geo-item" style="--stat-color:var(--accent2)">
+    <div class="bento-geo-item" style="--stat-color:var(--accent)">
       <div class="stat-label">Kab/Kota</div>
       <div class="bento-val sm"><?= (int)$n_city ?></div>
     </div>
     <div class="bento-divider"></div>
-    <div class="bento-geo-item" style="--stat-color:var(--teal)">
+    <div class="bento-geo-item" style="--stat-color:var(--accent)">
       <div class="stat-label">Kecamatan</div>
       <div class="bento-val sm"><?= (int)$n_dist ?></div>
     </div>
