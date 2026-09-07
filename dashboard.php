@@ -127,7 +127,7 @@ require_once __DIR__ . '/includes/header.php';
   <!-- Tanggal -->
   <div class="bento-card" style="--stat-color:var(--accent)">
     <div class="stat-label">Data per</div>
-    <div class="bento-val sm" style="font-size:15px;letter-spacing:0"><?= htmlspecialchars($tgl_query) ?></div>
+    <div class="bento-val sm"><?= htmlspecialchars($tgl_query) ?></div>
     <div class="bento-icon"><i class="ti ti-calendar"></i></div>
   </div>
 
