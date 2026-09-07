@@ -323,13 +323,13 @@ require_once __DIR__ . '/includes/header.php';
       <table>
         <thead>
           <tr>
-            <th>Waktu</th>
-            <th>User</th>
+            <th class="col-waktu">Waktu</th>
+            <th class="col-user">User</th>
             <th>File</th>
-            <th>Ukuran</th>
-            <th>Baris</th>
-            <th>Status</th>
-            <th>Keterangan</th>
+            <th class="col-ukuran">Ukuran</th>
+            <th class="col-baris">Baris</th>
+            <th class="col-status">Status</th>
+            <th>Ket.</th>
           </tr>
         </thead>
         <tbody>
