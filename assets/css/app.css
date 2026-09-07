@@ -590,6 +590,18 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 }
 .expand-row:hover { background: var(--hover); padding-left: 4px; }
 
+.gps-sort-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+    font-size: 11px;
+    color: var(--muted-hi);
+}
+.gps-sort-row input[type=number] { width: 90px; min-height: 32px; font-size: 12px; }
+.gps-sort-row .btn-sm { min-height: 32px; }
+
 .bar-label {
     font-size: 12px;
     color: var(--muted-hi);
@@ -656,9 +668,10 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 .badge {
     display: inline-flex;
     align-items: center;
-    padding: 1px 5px;
-    border-radius: 4px;
+    padding: 0px 5px;
+    border-radius: 3px;
     font-size: 9px;
+    line-height: 18px;
     font-family: var(--sans);
     font-weight: 500;
     letter-spacing: 0;
@@ -815,7 +828,11 @@ select option { background: var(--surface); color: var(--text); }
 /* ── TABLE ───────────────────────────────────────────────────── */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+.col-num   { width: 32px; }
+.col-svc   { width: 120px; }
+.col-name  { width: auto; }
+.col-stn   { width: 30%; }
 
 thead th {
     padding: 6px 10px;
@@ -838,7 +855,7 @@ tbody tr:hover { background: var(--hover); }
 tbody td { padding: 6px 10px; vertical-align: middle; }
 .td-muted { color: var(--muted-hi); font-size: 11px; }
 .td-mono  { font-family: var(--mono); font-size: 11px; letter-spacing: .3px; }
-.td-file  { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.td-file  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; max-width: 0; width: 35%; }
 .td-time  { white-space: nowrap; font-size: 11px; font-family: var(--mono); }
 
 /* Hide columns on small screens */
@@ -899,9 +916,9 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
 .peta-controls-row {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
     flex-wrap: wrap;
-    padding: 4px 0 6px;
+    padding: 3px 0 4px;
 }
 .peta-btn-group {
     display: flex;
@@ -1157,16 +1174,21 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
 .upload-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
 }
 @media (min-width: 640px) {
     .upload-grid { grid-template-columns: 1fr 1fr; }
 }
+/* Laporan riwayat tabel kolom */
+.col-waktu { width: 110px; }
+.col-user  { width: 120px; }
+.col-ukuran { width: 60px; }
+.col-baris  { width: 55px; }
+.col-status { width: 70px; }
 
 /* ── BENTO BOX (dashboard) ───────────────────────────────────── */
 .bento-grid {
     display: grid;
-    /* Mobile: 3 kolom sejajar */
     grid-template-columns: 1fr 1fr 1fr;
     gap: 7px;
     margin-bottom: 10px;
@@ -1216,35 +1238,26 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
 /* Mobile: Total ISR full width */
 .bento-lg {
     grid-column: span 3;
-    min-height: 64px;
+    min-height: 60px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }
 /* Tablet: Total ISR kolom pertama, span 2 baris */
-@media (min-width: 540px) {
-    .bento-lg {
-        grid-column: span 3;
-        grid-row: 1;
-        min-height: 64px;
-    }
-}
+/* bento-lg: span 3 di semua ukuran */
 /* Desktop: semua 1 baris sejajar, tidak ada span baris */
-@media (min-width: 1024px) {
-    .bento-lg {
-        grid-column: span 3;
-        grid-row: 1;
-        min-height: 64px;
-    }
-}
+/* bento-lg desktop: span 3 */
 
 .bento-val {
     font-family: var(--mono);
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--stat-color, var(--accent));
     line-height: 1;
     letter-spacing: -0.5px;
 }
 .bento-val.sm {
-    font-size: 18px;
+    font-size: 16px;
     letter-spacing: 0;
 }
 
@@ -1267,19 +1280,9 @@ tbody td { padding: 6px 10px; vertical-align: middle; }
     min-height: 54px;
     padding: 8px 10px;
 }
-@media (min-width: 540px) {
-    .bento-geo {
-        grid-column: span 3;
-        grid-row: 2;
-    }
-}
+/* bento-geo tablet: span 3 row 2 default */
 /* Desktop: geo card di kolom ke-4, 1 baris sejajar semua */
-@media (min-width: 1024px) {
-    .bento-geo {
-        grid-column: span 3;
-        grid-row: 2;
-    }
-}
+/* bento-geo desktop: sama */
 
 .bento-geo-item {
     display: flex;
