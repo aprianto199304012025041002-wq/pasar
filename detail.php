@@ -45,12 +45,12 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-  <a href="data.php" class="btn" style="border-color:#c7d2fe;color:#4F46E5;background:rgba(255,255,255,0.9)">
+  <a href="data.php" class="btn">
     <i class="ti ti-arrow-left"></i>Kembali
   </a>
   <div>
-    <div class="page-title" style="margin-bottom:0;color:#1e1b4b"><?= htmlspecialchars($d['stn_name'] ?: $d['clnt_name']) ?></div>
-    <div class="page-sub" style="color:#6366f1"><?= htmlspecialchars($d['curr_lic_num'] ?? '-') ?></div>
+    <div class="page-title" style="margin-bottom:0"><?= htmlspecialchars($d['stn_name'] ?: $d['clnt_name']) ?></div>
+    <div class="page-sub"><?= htmlspecialchars($d['curr_lic_num'] ?? '-') ?></div>
   </div>
 </div>
 
@@ -58,8 +58,8 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Info Klien -->
   <div class="detail-card">
-    <div class="detail-card-header" style="background:#EEF2FF;color:#3730a3">
-      <i class="ti ti-building" style="font-size:15px;color:#4F46E5"></i>Informasi Klien
+    <div class="detail-card-header">
+      <i class="ti ti-building" style="font-size:15px"></i>Informasi Klien
     </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
@@ -75,8 +75,8 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Info Lisensi -->
   <div class="detail-card">
-    <div class="detail-card-header" style="background:#ECFDF5;color:#065f46">
-      <i class="ti ti-license" style="font-size:15px;color:#059669"></i>Lisensi & Masa Berlaku
+    <div class="detail-card-header">
+      <i class="ti ti-license" style="font-size:15px"></i>Lisensi & Masa Berlaku
     </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
@@ -93,8 +93,8 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Info Frekuensi -->
   <div class="detail-card">
-    <div class="detail-card-header" style="background:#FFF7ED;color:#92400e">
-      <i class="ti ti-wave-sine" style="font-size:15px;color:#D97706"></i>Teknis Frekuensi
+    <div class="detail-card-header">
+      <i class="ti ti-wave-sine" style="font-size:15px"></i>Teknis Frekuensi
     </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
@@ -117,8 +117,8 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Info Perangkat -->
   <div class="detail-card">
-    <div class="detail-card-header" style="background:#FDF2F8;color:#9d174d">
-      <i class="ti ti-device-desktop" style="font-size:15px;color:#DB2777"></i>Perangkat & Lokasi
+    <div class="detail-card-header">
+      <i class="ti ti-device-desktop" style="font-size:15px"></i>Perangkat & Lokasi
     </div>
     <table style="width:100%;border-collapse:collapse">
       <?php
@@ -131,21 +131,21 @@ require_once __DIR__ . '/includes/header.php';
       row_detail('BHP',                $d['bhp'] ?? null);
       ?>
       <tr><td colspan="2" style="padding:8px 12px;border-top:0.5px solid #c7d2fe">
-        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Nama Stasiun</div>
-        <div style="font-size:12px;color:#1e1b4b"><?= htmlspecialchars($d['stn_name'] ?? '—') ?></div>
+        <div style="font-size:11px;margin-bottom:2px" class="td-muted">Nama Stasiun</div>
+        <div style="font-size:12px"><?= htmlspecialchars($d['stn_name'] ?? '—') ?></div>
       </td></tr>
       <tr style="background:#F5F7FF"><td colspan="2" style="padding:8px 12px">
-        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Alamat Stasiun</div>
-        <div style="font-size:12px;color:#1e1b4b"><?= htmlspecialchars($d['stn_addr'] ?? '—') ?></div>
+        <div style="font-size:11px;margin-bottom:2px" class="td-muted">Alamat Stasiun</div>
+        <div style="font-size:12px"><?= htmlspecialchars($d['stn_addr'] ?? '—') ?></div>
       </td></tr>
       <tr><td colspan="2" style="padding:8px 12px">
-        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Lokasi Administratif</div>
-        <div style="font-size:12px;color:#1e1b4b">
+        <div style="font-size:11px;margin-bottom:2px" class="td-muted">Lokasi Administratif</div>
+        <div style="font-size:12px">
           <?= htmlspecialchars(implode(', ', array_filter([$d['village'], $d['district'], $d['city'], $d['province']]))) ?>
         </div>
       </td></tr>
       <tr style="background:#F5F7FF"><td colspan="2" style="padding:8px 12px">
-        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Koordinat</div>
+        <div style="font-size:11px;margin-bottom:2px" class="td-muted">Koordinat</div>
         <div style="font-size:12px;font-family:monospace;color:#4F46E5"><?= $d['sid_lat'] ?>, <?= $d['sid_long'] ?></div>
       </td></tr>
     </table>
