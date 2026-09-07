@@ -171,12 +171,12 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), #7dd3fc);
+    background: var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    color: #000;
+    color: #fff;
     flex-shrink: 0;
     box-shadow: 0 0 14px var(--accent-glow);
 }
@@ -456,10 +456,10 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 
 /* ── PAGE TITLE ──────────────────────────────────────────────── */
 .page-title {
-    font-family: var(--mono);
-    font-size: 14px;
+    font-family: var(--sans);
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 0;
     color: var(--text);
     margin-bottom: 14px;
     display: flex;
@@ -495,15 +495,15 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 [data-theme="bright"] .card-header { background: rgba(0,0,0,.02); }
 
 .card-title {
-    font-family: var(--mono);
+    font-family: var(--sans);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: .06em;
     color: var(--accent);
     text-transform: uppercase;
     flex: 1;
 }
-.card-hint { font-size: 10px; color: var(--muted-hi); font-family: var(--mono); }
+.card-hint { font-size: 10px; color: var(--muted-hi); font-family: var(--sans); }
 
 /* ── STAT CARDS ──────────────────────────────────────────────── */
 .dash-stat3 {
@@ -549,9 +549,9 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 .stat-label {
     font-size: 9px;
     color: var(--muted-hi);
-    letter-spacing: 1.2px;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    font-family: var(--mono);
+    font-family: var(--sans);
 }
 .stat-val {
     font-family: var(--mono);
@@ -659,9 +659,9 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
     padding: 2px 8px;
     border-radius: 20px;
     font-size: 10px;
-    font-family: var(--mono);
-    font-weight: 700;
-    letter-spacing: .5px;
+    font-family: var(--sans);
+    font-weight: 600;
+    letter-spacing: 0;
     border: 1px solid transparent;
     white-space: nowrap;
 }
@@ -696,12 +696,12 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 .btn:active { transform: translateY(1px); }
 .btn-primary {
     background: var(--accent);
-    color: #000;
+    color: #fff;
     border-color: var(--accent);
-    font-weight: 700;
+    font-weight: 600;
     box-shadow: 0 0 16px var(--accent-glow);
 }
-.btn-primary:hover { background: #00c4dd; color: #000; box-shadow: 0 0 24px var(--accent-glow); }
+.btn-primary:hover { background: var(--accent); opacity: .9; color: #fff; box-shadow: 0 0 24px var(--accent-glow); }
 .btn-danger { border-color: var(--red); color: var(--red); }
 .btn-danger:hover { background: var(--red-lt); }
 @media (max-width: 767px) { .btn { min-height: var(--touch); } }
@@ -711,9 +711,9 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 .form-group label {
     font-size: 10px;
     color: var(--muted-hi);
-    letter-spacing: .8px;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    font-family: var(--mono);
+    font-family: var(--sans);
 }
 
 input[type=text], input[type=search], input[type=number],
@@ -771,8 +771,8 @@ select option { background: var(--surface); color: var(--text); }
     flex: 1;
     min-width: 0;
     overflow: hidden;
-    font-family: var(--mono);
-    letter-spacing: .5px;
+    font-family: var(--sans);
+    letter-spacing: 0;
 }
 .filter-active-summary { font-size: 10px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .filter-toggle-chevron { flex-shrink: 0; font-size: 13px; color: var(--muted); transition: transform var(--tm); }
@@ -819,9 +819,9 @@ table { width: 100%; border-collapse: collapse; font-size: 12px; }
 thead th {
     padding: 9px 12px;
     text-align: left;
-    font-family: var(--mono);
+    font-family: var(--sans);
     font-size: 9px;
-    letter-spacing: 1.2px;
+    letter-spacing: .06em;
     text-transform: uppercase;
     color: var(--muted-hi);
     background: var(--surface2);
@@ -852,7 +852,7 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     flex-wrap: wrap;
     gap: 8px;
 }
-.pag-info { font-size: 11px; color: var(--muted-hi); font-family: var(--mono); }
+.pag-info { font-size: 11px; color: var(--muted-hi); font-family: var(--sans); }
 .pag-links { display: flex; align-items: center; gap: 3px; }
 .pag-links a, .pag-links span {
     display: inline-flex;
@@ -883,8 +883,8 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     color: var(--muted-hi);
     gap: 10px;
     font-size: 12px;
-    font-family: var(--mono);
-    letter-spacing: .5px;
+    font-family: var(--sans);
+    letter-spacing: 0;
 }
 .empty-state i { font-size: 36px; opacity: .4; }
 
@@ -989,14 +989,11 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     text-align: center;
 }
 .login-logo {
-    font-family: var(--mono);
+    font-family: var(--sans);
     font-size: 22px;
     font-weight: 700;
-    letter-spacing: 5px;
-    background: linear-gradient(135deg, var(--accent), #7dd3fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    letter-spacing: 2px;
+    color: var(--accent);
 }
 .login-btn-sso {
     display: flex;
@@ -1016,8 +1013,9 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     transition: background var(--t), box-shadow var(--t), transform var(--t);
     box-shadow: 0 0 20px var(--accent-glow);
     font-family: var(--sans);
+    color: #fff;
 }
-.login-btn-sso:hover { background: #00c4dd; box-shadow: 0 0 32px var(--accent-glow); transform: translateY(-1px); text-decoration: none; color: #000; }
+.login-btn-sso:hover { opacity: .9; box-shadow: 0 0 32px var(--accent-glow); transform: translateY(-1px); text-decoration: none; color: #fff; }
 .login-note { margin-top: 14px; font-size: 11px; color: var(--muted-hi); }
 
 /* ── FOOTER ──────────────────────────────────────────────────── */
@@ -1026,8 +1024,7 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     border-top: 1px solid var(--border);
     font-size: 11px;
     color: var(--muted);
-    font-family: var(--mono);
-    letter-spacing: .5px;
+    font-family: var(--sans);
     margin-top: auto;
 }
 
@@ -1081,10 +1078,10 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     padding: 12px 16px;
     border-bottom: 1px solid var(--border);
     background: rgba(0,0,0,.1);
-    font-family: var(--mono);
+    font-family: var(--sans);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: .06em;
     color: var(--accent);
     text-transform: uppercase;
 }
@@ -1116,7 +1113,7 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     padding: 0 6px;
     border-radius: var(--radius-sm);
     font-size: 12px;
-    font-family: var(--mono);
+    font-family: var(--sans);
     cursor: pointer;
     border: 1px solid var(--border-md);
     background: var(--surface2);
@@ -1125,7 +1122,7 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
     text-decoration: none;
 }
 .pag-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); text-decoration: none; }
-.pag-cur { color: var(--accent); font-family: var(--mono); font-size: 12px; }
+.pag-cur { color: var(--accent); font-family: var(--sans); font-size: 12px; }
 .pag-per { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted-hi); }
 .pag-perpage { width: 60px; min-height: 30px; font-size: 12px; padding: 4px 6px; }
 
@@ -1148,7 +1145,7 @@ tbody td { padding: 9px 12px; vertical-align: middle; }
 }
 .upload-toast.show { display: flex; flex-direction: column; gap: 6px; }
 .toast-icon { font-size: 18px; }
-.toast-title { font-size: 12px; font-weight: 600; font-family: var(--mono); }
+.toast-title { font-size: 12px; font-weight: 600; font-family: var(--sans); }
 .toast-body { font-size: 12px; color: var(--muted-hi); }
 .toast-close { position: absolute; top: 8px; right: 10px; font-size: 14px; color: var(--muted); cursor: pointer; }
 .toast-msg { font-size: 11px; color: var(--muted-hi); }
