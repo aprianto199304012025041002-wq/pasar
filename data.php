@@ -279,37 +279,29 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-      <!-- Baris 3: Sort jarak -->
-      <div id="loc-bar" style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:11px;color:var(--muted);flex-shrink:0">Urutkan dari:</span>
-
-        <!-- Tombol GPS -->
-        <button type="button" id="btn-gps" class="btn" style="font-size:11px;padding:4px 9px;flex-shrink:0<?= $sort_dist ? ';color:#2563EB;border-color:#93c5fd' : '' ?>">
+      <!-- Baris 3: Sort jarak (compact) -->
+      <div id="loc-bar" class="gps-sort-row">
+        <span style="flex-shrink:0;color:var(--muted)">Sort:</span>
+        <button type="button" id="btn-gps" class="btn" style="font-size:11px;padding:3px 8px;flex-shrink:0<?= $sort_dist ? ';color:#2563EB;border-color:#93c5fd' : '' ?>">
           <i class="ti ti-current-location<?= $sort_dist ? '-filled' : '' ?>"></i>
-          <?= $sort_dist ? 'Lokasi aktif' : 'Lokasi saya (GPS)' ?>
+          <?= $sort_dist ? 'Aktif' : 'GPS' ?>
         </button>
-
-        <!-- Input manual -->
-        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <input type="number" id="inp-lat" placeholder="Latitude"
-                 value="<?= htmlspecialchars($_GET['ulat'] ?? '') ?>"
-                 step="0.000001" style="width:min(110px,38vw);font-size:16px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
-          <input type="number" id="inp-lng" placeholder="Longitude"
-                 value="<?= htmlspecialchars($_GET['ulng'] ?? '') ?>"
-                 step="0.000001" style="width:min(110px,38vw);font-size:16px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
-          <button type="button" id="btn-apply-coord" class="btn" style="font-size:11px;padding:4px 9px;flex-shrink:0">
-            <i class="ti ti-check"></i> Terapkan
-          </button>
-        </div>
-
+        <input type="number" id="inp-lat" placeholder="Lat"
+               value="<?= htmlspecialchars($_GET['ulat'] ?? '') ?>"
+               step="0.000001" style="width:80px;font-size:13px;padding:3px 5px;border:1px solid var(--border);border-radius:6px;min-height:30px">
+        <input type="number" id="inp-lng" placeholder="Lng"
+               value="<?= htmlspecialchars($_GET['ulng'] ?? '') ?>"
+               step="0.000001" style="width:80px;font-size:13px;padding:3px 5px;border:1px solid var(--border);border-radius:6px;min-height:30px">
+        <button type="button" id="btn-apply-coord" class="btn" style="font-size:11px;padding:3px 8px;flex-shrink:0">
+          <i class="ti ti-check"></i>
+        </button>
         <?php if ($sort_dist): ?>
-        <span style="font-size:11px;color:#2563EB;flex-shrink:0">
-          <i class="ti ti-map-pin" style="font-size:10px"></i>
-          <?= sprintf('%.6f', $user_lat) ?>, <?= sprintf('%.6f', $user_lng) ?>
+        <span style="font-size:10px;color:#2563EB;flex-shrink:0">
+          <?= sprintf('%.4f', $user_lat) ?>, <?= sprintf('%.4f', $user_lng) ?>
         </span>
         <a href="<?= htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?') . '?' . http_build_query(array_diff_key($_GET, ['ulat'=>1,'ulng'=>1,'page'=>1]))) ?>"
            style="font-size:11px;color:#dc2626;text-decoration:none;flex-shrink:0">
-          <i class="ti ti-x" style="font-size:10px"></i> Hapus lokasi
+          <i class="ti ti-x"></i>
         </a>
         <?php endif; ?>
       </div>
@@ -329,10 +321,10 @@ require_once __DIR__ . '/includes/header.php';
     <table>
       <thead>
         <tr>
-          <th style="width:36px">#</th>
+          <th style="width:28px">#</th>
           <th>Nama Klien</th>
-          <th>Layanan</th>
-          <th class="col-hide-sm">Sub-layanan</th>
+          <th style="width:110px">Layanan</th>
+          <th class="col-hide-sm" style="width:90px">Sub-layanan</th>
           <th>Nama Stasiun</th>
           <th class="col-hide-sm">Frekuensi</th>
           <th class="col-hide-md">No. Lisensi</th>
