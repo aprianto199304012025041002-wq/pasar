@@ -915,18 +915,20 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
     display: flex;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     padding: 3px 0 4px;
 }
 .peta-btn-group {
-    display: contents; /* items masuk langsung ke flex parent */
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
 }
 .peta-btn-group .btn {
-    height: 28px;
-    font-size: 11px;
-    padding: 0 10px;
+    height: 26px;
+    font-size: 10px;
+    padding: 0 7px;
     white-space: nowrap;
-    flex-shrink: 0;
+    gap: 3px;
 }
 .btn-sm {
     font-size: 12px;
@@ -936,7 +938,10 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
 .map-controls::-webkit-scrollbar { display: none; }
 
 .map-legend {
-    display: contents; /* items masuk langsung ke flex row */
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 3px 8px;
+    flex-shrink: 0;
 }
 .legend-item {
     display: flex;
@@ -946,7 +951,8 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
     color: var(--muted-hi);
     white-space: nowrap;
 }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.btn-label-short { font-size: 10px; }
 
 /* Leaflet overrides */
 .leaflet-control-zoom a {
