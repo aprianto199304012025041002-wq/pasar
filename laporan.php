@@ -323,13 +323,13 @@ require_once __DIR__ . '/includes/header.php';
       <table>
         <thead>
           <tr>
-            <th class="col-waktu">Waktu</th>
-            <th class="col-user">User</th>
+            <th>Waktu</th>
+            <th>User</th>
             <th>File</th>
-            <th class="col-ukuran">Ukuran</th>
-            <th class="col-baris">Baris</th>
-            <th class="col-status">Status</th>
-            <th>Ket.</th>
+            <th>Ukuran</th>
+            <th>Baris</th>
+            <th>Status</th>
+            <th>Keterangan</th>
           </tr>
         </thead>
         <tbody>
@@ -338,13 +338,9 @@ require_once __DIR__ . '/includes/header.php';
             <td class="td-mono" style="white-space:nowrap;">
               <?= date('d/m/Y H:i', strtotime($l['uploaded_at'])) ?>
             </td>
-            <td>
-              <div style="font-weight:500;font-size:11px;"><?= htmlspecialchars($l['user_name']) ?></div>
-              <div style="font-size:10px;color:var(--muted);"><?= htmlspecialchars($l['user_email']) ?></div>
-            </td>
-            <td class="td-file">
+            <td style="font-size:11px;font-weight:500"><?= htmlspecialchars($l['user_name']) ?></td>
+            <td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
               <?= htmlspecialchars($l['file_name']) ?>
-              <div style="font-size:9px;color:var(--muted);text-transform:uppercase;"><?= htmlspecialchars($l['file_type']) ?></div>
             </td>
             <td class="td-muted" style="white-space:nowrap;"><?= _fmt_bytes((int)$l['file_size']) ?></td>
             <td style="text-align:right;font-weight:500;">
