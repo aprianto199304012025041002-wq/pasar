@@ -112,11 +112,9 @@ require_once __DIR__ . '/includes/header.php';
 
   <!-- Total ISR — large -->
   <div class="bento-card bento-lg" style="--stat-color:var(--accent)">
-    <div>
-      <div class="stat-label">Total ISR</div>
-      <div class="bento-val"><?= number_format($total,0,',','.') ?></div>
-    </div>
-    <div class="bento-icon" style="position:static;opacity:.25"><i class="ti ti-license"></i></div>
+    <div class="bento-icon"><i class="ti ti-license"></i></div>
+    <div class="stat-label">Total ISR</div>
+    <div class="bento-val"><?= number_format($total,0,',','.') ?></div>
   </div>
 
   <!-- Total Klien -->
