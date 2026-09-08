@@ -588,13 +588,19 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
     display: flex;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     padding: 4px 0;
     font-size: 11px;
     color: var(--muted-hi);
 }
-.gps-sort-row input[type=number] { width: 90px; min-height: 32px; font-size: 12px; }
-.gps-sort-row .btn-sm { min-height: 32px; }
+.gps-sort-row * { box-sizing: border-box; }
+.gps-sort-row input[type=number] {
+    width: 80px; height: 32px; min-height: 32px;
+    font-size: 12px; padding: 0 6px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface2); color: var(--text);
+}
+.gps-sort-row .btn { height: 32px; min-height: 32px; padding: 0 10px; font-size: 11px; }
 
 .bar-label {
     font-size: 12px;
@@ -907,7 +913,7 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
 /* Baris kontrol dalam drawer peta: tombol + legenda */
 .peta-controls-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     flex-wrap: wrap;
     padding: 3px 0 4px;
@@ -916,7 +922,14 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
     display: flex;
     gap: 6px;
     flex-shrink: 0;
-    flex-wrap: wrap;
+}
+.peta-btn-group .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 110px;
+    height: 32px;
+    font-size: 11px;
+    padding: 0 10px;
 }
 .btn-sm {
     font-size: 12px;
@@ -926,12 +939,10 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
 .map-controls::-webkit-scrollbar { display: none; }
 
 .map-legend {
-    display: flex;
-    align-items: center;
-    gap: 8px 14px;
-    flex-wrap: wrap;
-    flex: 1;
-    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 4px 12px;
+    flex-shrink: 0;
 }
 .legend-item {
     display: flex;
