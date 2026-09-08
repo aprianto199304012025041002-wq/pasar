@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
             timeout = setTimeout(function () {
                 var form = searchInput.closest('form');
                 if (form) form.submit();
-            }, 400);
+            }, 900);
         });
     }
 
