@@ -828,11 +828,7 @@ select option { background: var(--surface); color: var(--text); }
 /* ── TABLE ───────────────────────────────────────────────────── */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
-.col-num   { width: 32px; }
-.col-svc   { width: 120px; }
-.col-name  { width: auto; }
-.col-stn   { width: 30%; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
 
 thead th {
     padding: 6px 10px;
@@ -858,8 +854,7 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
 .td-file  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; max-width: 0; width: 35%; }
 .td-time  { white-space: nowrap; font-size: 11px; font-family: var(--mono); }
 
-/* Tabel: semua td ellipsis agar tidak overflow */
-tbody td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 0; }
+
 
 /* Hide columns on small screens */
 @media (max-width: 639px)  { .col-hide-sm { display: none; } }
@@ -1182,12 +1177,7 @@ tbody td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-w
 @media (min-width: 640px) {
     .upload-grid { grid-template-columns: 1fr 1fr; }
 }
-/* Laporan riwayat tabel kolom */
-.col-waktu { width: 110px; }
-.col-user  { width: 120px; }
-.col-ukuran { width: 60px; }
-.col-baris  { width: 55px; }
-.col-status { width: 70px; }
+
 
 /* ── BENTO BOX (dashboard) ───────────────────────────────────── */
 .bento-grid {
@@ -1240,11 +1230,8 @@ tbody td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-w
 
 /* Mobile: Total ISR full width */
 .bento-lg {
-    grid-column: span 3;
+    grid-column: 1;
     min-height: 60px;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
 }
 /* Tablet: Total ISR kolom pertama, span 2 baris */
 /* bento-lg: span 3 di semua ukuran */
@@ -1275,7 +1262,7 @@ tbody td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-w
 
 /* Geo card — 3 items dalam satu row */
 .bento-geo {
-    grid-column: span 3;
+    grid-column: 1 / -1;
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
