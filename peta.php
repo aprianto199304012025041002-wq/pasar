@@ -205,11 +205,11 @@ require_once __DIR__ . '/includes/header.php';
         <div class="peta-controls-row">
           <!-- Tombol aksi -->
           <div class="peta-btn-group">
-            <button type="button" id="btn-myloc" class="btn btn-sm">
-              <i class="ti ti-current-location"></i> Lokasi Saya
+            <button type="button" id="btn-myloc" class="btn btn-sm" title="Lokasi Saya">
+              <i class="ti ti-current-location"></i> <span class="btn-label-short">Lokasi</span>
             </button>
-            <button type="button" id="btn-cluster" class="btn btn-sm">
-              <i class="ti ti-layout-grid"></i> Cluster: ON
+            <button type="button" id="btn-cluster" class="btn btn-sm" title="Toggle Cluster">
+              <i class="ti ti-layout-grid"></i> <span class="btn-label-short">Cluster</span>
             </button>
           </div>
           <!-- Legenda service -->
@@ -528,6 +528,19 @@ if (filterCompact) {
 }
 
 })();
+
+    // Auto-search debounce 1000ms
+    var _qTimeout;
+    var _qInput = document.getElementById('q');
+    if (_qInput) {
+        _qInput.addEventListener('input', function() {
+            clearTimeout(_qTimeout);
+            _qTimeout = setTimeout(function() {
+                var f = _qInput.closest('form');
+                if (f) f.submit();
+            }, 1000);
+        });
+    }
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
