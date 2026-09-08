@@ -574,10 +574,10 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 
 .expand-row {
     display: grid;
-    grid-template-columns: 180px 1fr auto;
+    grid-template-columns: 150px 1fr auto;
     align-items: center;
     gap: 8px;
-    padding: 5px 0;
+    padding: 5px 8px 5px 0;
     cursor: pointer;
     border-radius: var(--radius-sm);
     transition: background var(--t);
@@ -585,7 +585,7 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
 
 @media (max-width: 480px) {
     .expand-row {
-        grid-template-columns: 120px 1fr auto;
+        grid-template-columns: 110px 1fr auto;
     }
 }
 .expand-row:hover { background: var(--hover); padding-left: 4px; }
@@ -619,7 +619,7 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
     transition: transform var(--tm);
 }
 .expand-row.open .expand-chevron { transform: rotate(90deg); }
-.expand-children { display: none; padding-left: 10px; }
+.expand-children { display: none; padding-left: 14px; }
 .expand-children.open { display: block; }
 
 .bar-track {
@@ -640,7 +640,7 @@ a, button, [role=button] { touch-action: manipulation; -webkit-tap-highlight-col
     align-items: center;
 }
 .er-abs { font-family: var(--mono); font-size: 11px; color: var(--text); text-align: right; min-width: 44px; }
-.er-pct { font-family: var(--mono); font-size: 10px; color: var(--muted-hi); width: 36px; text-align: right; }
+.er-pct { font-family: var(--mono); font-size: 10px; color: var(--muted-hi); width: 36px; text-align: right; padding-right: 4px; }
 
 /* Client search */
 .client-search-wrap { padding: 7px 12px; border-bottom: 1px solid var(--border); }
