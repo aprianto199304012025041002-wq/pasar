@@ -1192,19 +1192,23 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
     margin-bottom: 10px;
 }
 
-/* Tablet ke atas: 4 kolom sejajar */
+/* Tablet ke atas: Total ISR lebih besar, 2 card kecil di sebelahnya */
 @media (min-width: 540px) {
     .bento-grid {
-        grid-template-columns: 2fr 1fr 1fr;
+        grid-template-columns: 1.5fr 1fr 1fr;
     }
+    .bento-lg { grid-column: 1; }
+    .bento-geo { grid-column: 1 / -1; }
 }
 
-/* Desktop: semua sejajar 4 kolom, tidak ada span baris */
+/* Desktop: 4 kolom sejajar 1 baris */
 @media (min-width: 1024px) {
     .bento-grid {
         grid-template-columns: 2fr 1fr 1fr 2fr;
         grid-template-rows: auto;
     }
+    .bento-lg  { grid-column: 1; grid-row: 1; }
+    .bento-geo { grid-column: 4; grid-row: 1; }
 }
 
 .bento-card {
