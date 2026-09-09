@@ -1207,8 +1207,9 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
         grid-template-columns: 2fr 1fr 1fr 2fr;
         grid-template-rows: auto;
     }
-    .bento-lg  { grid-column: 1; grid-row: 1; }
-    .bento-geo { grid-column: 4; grid-row: 1; }
+    .bento-lg  { grid-column: 1 !important; grid-row: 1; }
+    .bento-geo { grid-column: 4 !important; grid-row: 1; flex-direction: column; justify-content: center; gap: 6px; }
+    .bento-geo .bento-divider { width: 80%; height: 1px; }
 }
 
 .bento-card {
