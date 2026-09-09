@@ -35,7 +35,7 @@ switch ($err_code) {
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#080b10">
-<title>Login — <?= APP_NAME ?></title>
+<title>Login — PASAR</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link rel="stylesheet" href="<?= APP_BASE_URL ?>/assets/css/app.css?v=<?= file_exists(__DIR__ . '/assets/css/app.css') ? filemtime(__DIR__ . '/assets/css/app.css') : '0' ?>">
 <style>
@@ -171,7 +171,7 @@ body {
     <div class="logo-icon">
       <i class="ti ti-satellite"></i>
     </div>
-    <div class="logo-name"><?= APP_NAME ?></div>
+    <div class="logo-name">PASAR</div>
     <div class="logo-desc">
       Panduan Analisa Stasiun Radio
       <span class="logo-org">Balai Monitor Spektrum Frekuensi Radio Kelas I Yogyakarta</span>
