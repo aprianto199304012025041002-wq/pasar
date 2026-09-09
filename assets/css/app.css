@@ -1201,15 +1201,14 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
     .bento-geo { grid-column: 1 / -1; }
 }
 
-/* Desktop: 4 kolom sejajar 1 baris */
+/* Desktop: 4 kolom 1 baris — ISR | Klien | DataPer | Geo */
 @media (min-width: 1024px) {
     .bento-grid {
-        grid-template-columns: 2fr 1fr 1fr 2fr;
+        grid-template-columns: 1fr 1fr 1fr 3fr;
         grid-template-rows: auto;
     }
     .bento-lg  { grid-column: 1 !important; grid-row: 1; }
-    .bento-geo { grid-column: 4 !important; grid-row: 1; flex-direction: column; justify-content: center; gap: 6px; }
-    .bento-geo .bento-divider { width: 80%; height: 1px; }
+    .bento-geo { grid-column: 4 !important; grid-row: 1; }
 }
 
 .bento-card {
