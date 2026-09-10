@@ -43,10 +43,14 @@ switch ($err_code) {
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
     height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    transition: background var(--t-med), color var(--t-med);
+    background: #080b10;
+    color: #e2e8f0;
+    font-family: var(--sans, system-ui, sans-serif);
+    transition: background .25s ease, color .25s ease;
+}
+[data-theme="bright"] body {
+    background: #f0f4f9;
+    color: #1a2233;
 }
 body {
     display: flex;
@@ -92,14 +96,16 @@ body {
     font-size: 20px; font-weight: 700;
     letter-spacing: 2px;
     color: #4A90D9;
-    font-family: var(--sans);
+    font-family: var(--sans, system-ui, sans-serif);
     margin-bottom: 6px;
 }
+[data-theme="bright"] .logo-name { color: #1351B4; }
 .logo-desc {
-    font-size: 10px; color: var(--muted-hi);
+    font-size: 10px; color: #94a3b8;
     letter-spacing: 1px; text-transform: uppercase;
-    line-height: 1.7; font-family: var(--sans);
+    line-height: 1.7; font-family: var(--sans, system-ui, sans-serif);
 }
+[data-theme="bright"] .logo-desc { color: #64748b; }
 .logo-org {
     display: block; margin-top: 3px;
     font-size: 10px; color: var(--muted);
@@ -107,12 +113,17 @@ body {
     line-height: 1.6;
 }
 .login-card {
-    background: rgba(15,21,32,.85);
+    background: rgba(15,21,32,.75);
     backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(74,144,217,.15);
+    border: 1px solid rgba(74,144,217,.2);
     border-radius: 12px;
     padding: 24px 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+[data-theme="bright"] .login-card {
+    background: rgba(255,255,255,.85);
+    border-color: rgba(19,81,180,.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,.1);
 }
 .err-box {
     background: var(--red-glow);
