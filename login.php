@@ -186,7 +186,7 @@ body {
     <div class="logo-name">PASAR</div>
     <div class="logo-desc">
       Panduan Analisa Stasiun Radio
-      <span class="logo-org">BALAI MONITOR SPEKTRUM FREKUENSI RADIO DAN INFRASTRUKTUR DIGITAL KELAS I YOGYAKARTA</span>
+      <span class="logo-org">BALAI MONITOR SPEKTRUM FREKUENSI RADIO DAN INFRASTRUKTUR DIGITAL<br>KELAS I YOGYAKARTA</span>
     </div>
   </div>
 
