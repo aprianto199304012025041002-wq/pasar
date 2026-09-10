@@ -106,12 +106,12 @@ body {
     line-height: 1.6;
 }
 .login-card {
-    background: var(--glass-hi);
+    background: rgba(15,21,32,.85);
     backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid var(--border-hi);
+    border: 1px solid rgba(74,144,217,.15);
     border-radius: 12px;
     padding: 24px 20px;
-    box-shadow: var(--shadow-float);
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
 }
 .err-box {
     background: var(--red-glow);
@@ -126,9 +126,9 @@ body {
     display: flex; align-items: center; justify-content: center;
     gap: 10px; width: 100%;
     padding: 11px 16px;
-    background: var(--accent-bg);
-    border: 1px solid var(--accent-bdr);
-    border-radius: var(--radius);
+    background: rgba(74,144,217,.1);
+    border: 1px solid rgba(74,144,217,.6);
+    border-radius: 10px;
     color: #4A90D9;
     font-family: var(--sans);
     font-size: 13px; font-weight: 600;
@@ -139,7 +139,7 @@ body {
 .btn-sso:hover {
     background: var(--accent-bg);
     border-color: #4A90D9;
-    box-shadow: 0 0 20px var(--accent-glow);
+    box-shadow: 0 0 20px rgba(74,144,217,.25);
     transform: translateY(-1px);
 }
 .btn-sso:active { transform: scale(.98); }
