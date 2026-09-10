@@ -74,23 +74,23 @@ body {
     transition: border-color var(--t-fast), color var(--t-fast);
     -webkit-tap-highlight-color: transparent;
 }
-.theme-fab:hover { border-color: var(--accent); color: var(--accent); }
+.theme-fab:hover { border-color: #4A90D9; color: #4A90D9; }
 .login-wrap { width: 100%; max-width: 340px; }
 .logo-area { text-align: center; margin-bottom: 24px; }
 .logo-icon {
     width: 56px; height: 56px;
     border-radius: 14px;
-    background: var(--accent-bg);
-    border: 1px solid var(--accent-bdr);
+    background: rgba(74,144,217,.1);
+    border: 1px solid rgba(74,144,217,.3);
     display: inline-flex; align-items: center; justify-content: center;
     margin-bottom: 14px;
-    box-shadow: 0 0 24px var(--accent-glow);
-    font-size: 26px; color: var(--accent);
+    box-shadow: 0 0 24px rgba(74,144,217,.2);
+    font-size: 26px; color: #4A90D9;
 }
 .logo-name {
     font-size: 20px; font-weight: 700;
     letter-spacing: 2px;
-    color: var(--accent);
+    color: #4A90D9;
     font-family: var(--sans);
     margin-bottom: 6px;
 }
@@ -129,7 +129,7 @@ body {
     background: var(--accent-bg);
     border: 1px solid var(--accent-bdr);
     border-radius: var(--radius);
-    color: var(--accent);
+    color: #4A90D9;
     font-family: var(--sans);
     font-size: 13px; font-weight: 600;
     text-decoration: none;
@@ -138,7 +138,7 @@ body {
 }
 .btn-sso:hover {
     background: var(--accent-bg);
-    border-color: var(--accent);
+    border-color: #4A90D9;
     box-shadow: 0 0 20px var(--accent-glow);
     transform: translateY(-1px);
 }
