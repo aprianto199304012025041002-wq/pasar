@@ -23,6 +23,7 @@ $_theme    = $_COOKIE['theme'] ?? 'dark';
 <html lang="id" data-theme="<?= htmlspecialchars($_theme) ?>">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PASAR — <?= htmlspecialchars($page_title ?? 'Dashboard') ?></title>
 <!-- fonts: system stack, no external dependency -->
