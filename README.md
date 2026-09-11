@@ -47,6 +47,7 @@ pasar/
 ├── data.php                # Tabel ISR dengan filter + sort jarak Haversine
 ├── default.php             # Landing page / redirect
 ├── detail.php              # Detail satu record ISR + mini-map
+├── favicon.svg             # Favicon aplikasi
 ├── index.php               # Entry point (redirect ke login)
 ├── laporan.php             # Upload & import data ISR (XLSX/CSV/SQL) + riwayat upload
 ├── login.php               # Redirect ke SSO GUDEG dengan state CSRF
@@ -114,6 +115,8 @@ User → login.php (generate state CSRF → redirect ke gudeg.xo.je/sso.php)
 
 `verify_token()` di `includes/auth.php` memverifikasi token secara lokal menggunakan `SSO_PUBLIC_KEY` (RSA RS256) — tidak ada round-trip ke server GUDEG. Mode HMAC tersedia sebagai fallback kompatibilitas mundur.
 
+> **Catatan:** Validasi state CSRF di `callback.php` dibypass untuk request dari WebView APK (`GudegJogjaApp` User-Agent) karena WebView tidak membawa session cookie saat cross-site redirect. Token JWT RS256 tetap divalidasi penuh.
+
 ---
 
 ## 🗺️ Peta & GeoJSON
@@ -168,9 +171,10 @@ Push ke `main` → GitHub Actions:
 - `.htaccess` tidak di-overwrite saat deploy (di-exclude dari FTP workflow)
 - `Options -Indexes` — directory listing dimatikan
 - Semua query menggunakan PDO Prepared Statements
-- Validasi state CSRF di `callback.php` (one-time, expired setelah 10 menit) — dibypass untuk request dari WebView APK (`GudegJogjaApp` User-Agent) karena WebView tidak membawa session cookie saat cross-site redirect; token JWT RS256 tetap divalidasi penuh
+- Validasi state CSRF di `callback.php` (one-time, expired setelah 10 menit)
 - Session regenerasi ID setelah login (`session_regenerate_id(true)`)
 - API `/api/geojson.php` memverifikasi sesi SSO sebelum mengembalikan data
+- Cookie session: `httponly`, `secure`, `SameSite=None` (cross-origin SSO callback)
 
 ---
 
