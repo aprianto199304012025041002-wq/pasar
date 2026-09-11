@@ -103,15 +103,16 @@ body {
 .logo-desc {
     font-size: 10px; color: #94a3b8;
     letter-spacing: 1px; text-transform: uppercase;
-    line-height: 1.7; font-family: var(--sans, system-ui, sans-serif);
+    line-height: 1.3; font-family: var(--sans, system-ui, sans-serif);
+    margin-bottom: 8px;
 }
 [data-theme="bright"] .logo-desc { color: #64748b; }
 .logo-org {
-    display: block; margin-top: 3px;
-    font-size: 10px;
+    display: block; margin-top: 0;
+    font-size: 9px;
     color: var(--muted, #94a3b8);
-    letter-spacing: .02em; text-transform: none;
-    line-height: 1.3; white-space: nowrap;
+    letter-spacing: .04em; text-transform: uppercase;
+    line-height: 1.25; white-space: nowrap;
 }
 .login-card {
     background: rgba(15,21,32,.75);
