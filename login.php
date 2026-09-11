@@ -108,8 +108,9 @@ body {
 [data-theme="bright"] .logo-desc { color: #64748b; }
 .logo-org {
     display: block; margin-top: 3px;
-    font-size: 9px; color: var(--muted);
-    letter-spacing: 0; text-transform: none;
+    font-size: clamp(6px, 1.8vw, 9px);
+    color: var(--muted, #94a3b8);
+    letter-spacing: .02em; text-transform: none;
     line-height: 1.6; white-space: nowrap;
 }
 .login-card {
