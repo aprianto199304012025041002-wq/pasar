@@ -868,7 +868,8 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
     padding: 7px 12px;
     border-top: 1px solid var(--border);
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
+    align-items: center;
 }
 .pag-info { font-size: 11px; color: var(--muted-hi); font-family: var(--sans); }
 .pag-links { display: flex; align-items: center; gap: 3px; }
@@ -1146,8 +1147,9 @@ tbody td { padding: 5px 8px; vertical-align: middle; }
 }
 .pag-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); text-decoration: none; }
 .pag-cur { color: var(--accent); font-family: var(--sans); font-size: 12px; }
-.pag-per { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted-hi); }
-.pag-perpage { width: 60px; min-height: 30px; font-size: 12px; padding: 4px 6px; }
+.pag-per { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted-hi); flex-shrink: 0; }
+.pag-per a, .pag-per span { min-width: 28px; text-align: center; }
+.pag-perpage { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted-hi); flex-shrink: 0; }
 
 /* upload toast */
 .upload-toast {
