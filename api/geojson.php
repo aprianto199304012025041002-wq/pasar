@@ -1,12 +1,16 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/_security.php';
 
 if (!is_logged_in()) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
+
+// Rate limit: geojson query berat, max 20 request/menit per IP
+check_rate_limit('geojson', 20, 60);
 
 header('Content-Type: application/json; charset=utf-8');
 
