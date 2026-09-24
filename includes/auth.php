@@ -25,13 +25,19 @@ function require_login() {
         header('Location: ' . $login_url);
         exit;
     }
-    // Session timeout 8 jam
-    if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > 28800) {
-        session_unset();
-        session_destroy();
+    // Session timeout: idle 30 menit atau absolut 8 jam
+    $now = time();
+    if (isset($_SESSION['login_time']) && ($now - $_SESSION['login_time']) > 28800) {
+        session_unset(); session_destroy();
         header('Location: ' . APP_BASE_URL . '/login.php?err=timeout');
         exit;
     }
+    if (isset($_SESSION['last_activity']) && ($now - $_SESSION['last_activity']) > 1800) {
+        session_unset(); session_destroy();
+        header('Location: ' . APP_BASE_URL . '/login.php?err=timeout');
+        exit;
+    }
+    $_SESSION['last_activity'] = $now;
 }
 
 function get_user(): array {
