@@ -25,6 +25,13 @@ function require_login() {
         header('Location: ' . $login_url);
         exit;
     }
+    // Session timeout 8 jam
+    if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > 28800) {
+        session_unset();
+        session_destroy();
+        header('Location: ' . APP_BASE_URL . '/login.php?err=timeout');
+        exit;
+    }
 }
 
 function get_user(): array {
